@@ -245,9 +245,10 @@
     entity_id: light.kitchen_light_2
     state: 'off'
   actions:
-  - data:
-      entity_id: light.kitchen_light_1
+  - data: {}
     action: light.turn_off
+    target:
+      entity_id: light.kitchen_light_1
   mode: single
 - id: '1770791760884'
   alias: Keukenlamp 1 aan - achterdeur is 2+ minuten open
@@ -264,10 +265,11 @@
     state: 'off'
   actions:
   - data:
-      entity_id: light.kitchen_light_1
       brightness_pct: 100
       flash: long
     action: light.turn_on
+    target:
+      entity_id: light.kitchen_light_1
   mode: single
 - id: '1770813357193'
   alias: Woonkamer electrische kachel aan - tijd en temperatuur
@@ -374,10 +376,11 @@
     attribute: elevation
   actions:
   - data:
-      entity_id: light.zg2m_kitchen_lights
       brightness: 115
       transition: 1
     action: light.turn_on
+    target:
+      entity_id: light.zg2m_kitchen_lights
   mode: single
 - id: '1770841858877'
   alias: Keuken lampen uit - beweging
@@ -390,9 +393,10 @@
       minutes: 20
   conditions: []
   actions:
-  - data:
-      entity_id: light.zg2m_kitchen_lights
+  - data: {}
     action: light.turn_off
+    target:
+      entity_id: light.zg2m_kitchen_lights
   mode: single
 - id: '1770842095813'
   alias: Kantoor lampen aan - beweging
@@ -424,17 +428,19 @@
       minutes: 15
   conditions: []
   actions:
-  - data:
-      entity_id: lights.zg2m_office_lights
+  - data: {}
     action: light.turn_off
+    target:
+      entity_id: light.zg2m_office_lights
   - delay:
       hours: 0
       minutes: 0
       seconds: 3
       milliseconds: 0
-  - data:
-      entity_id: light.wled_office
+  - data: {}
     action: light.turn_off
+    target:
+      entity_id: light.wled_office
   mode: single
 - id: '1770842282219'
   alias: Kantoor kast lampen toggle - knop
@@ -488,8 +494,8 @@
     metadata: {}
     target:
       entity_id:
-      - lights.zg2m_office_lights
       - light.wled_office
+      - light.zg2m_office_lights
     data: {}
   mode: single
 - id: '1770842519407'
@@ -518,9 +524,10 @@
     entity_id: sun.sun
     attribute: elevation
   actions:
-  - data:
-      entity_id: light.backyard_spots
+  - data: {}
     action: light.turn_on
+    target:
+      entity_id: light.backyard_spots
   mode: single
 - id: '1770890373117'
   alias: Achtertuin lampen uit - beweging
@@ -533,9 +540,10 @@
       minutes: 5
   conditions: []
   actions:
-  - data:
-      entity_id: light.backyard_spots
+  - data: {}
     action: light.turn_off
+    target:
+      entity_id: light.backyard_spots
   mode: single
 - id: '1770890427344'
   alias: Achtertuin camera activeer nachtmodus - zon
@@ -572,9 +580,10 @@
   conditions: []
   actions:
   - data:
-      entity_id: light.zg2m_frontdoor_lights
       transition: 1
     action: light.turn_off
+    target:
+      entity_id: light.zg2m_frontdoor_lights
   mode: single
 - id: '1770891666770'
   alias: Oprit camera deactiveer nachtmodus - zon
@@ -584,9 +593,10 @@
     event: sunrise
   conditions: []
   actions:
-  - data:
-      entity_id: switch.driveway_camera_night_mode
+  - data: {}
     action: switch.turn_off
+    target:
+      entity_id: switch.driveway_camera_night_mode
   mode: single
 - id: '1770891813186'
   alias: Oprit camera activeer nachtmodus - zon
@@ -596,48 +606,27 @@
     event: sunset
   conditions: []
   actions:
-  - data:
-      entity_id: switch.driveway_camera_night_mode
+  - data: {}
     action: switch.turn_on
+    target:
+      entity_id: switch.driveway_camera_night_mode
   mode: single
 - id: '1770897794427'
-  alias: Oprit voordeur lampen aan - beweging
+  alias: Oprit voordeur lampen aan - tijd
   description: Turn lights on when there is motion in the hallway in the morning
   triggers:
-  - entity_id: binary_sensor.hallway_motion_sensor_occupancy
-    trigger: state
-    to: 'on'
+  - trigger: time
+    at: 06:00:00
   conditions:
-  - condition: time
-    after: 05:00:00
-  - condition: sun
-    before: sunrise
+  - condition: sun.is_set
+    options: {}
   actions:
   - data:
-      entity_id: light.zg2m_frontdoor_lights
       brightness: 254
       transition: 1
     action: light.turn_on
-  mode: single
-- id: '1770897854767'
-  alias: Oprit voordeur lampen uit - beweging
-  description: Turn lights off when there is no motion in the hallway in the morning
-  triggers:
-  - entity_id: binary_sensor.hallway_motion_sensor_occupancy
-    trigger: state
-    to: 'off'
-    for:
-      minutes: 5
-  conditions:
-  - condition: time
-    after: 05:00:00
-  - condition: time
-    before: '12:00:00'
-  actions:
-  - data:
+    target:
       entity_id: light.zg2m_frontdoor_lights
-      transition: 1
-    action: light.turn_off
   mode: single
 - id: '1770897936087'
   alias: Oprit voordeur lampen aan - zon
@@ -657,20 +646,19 @@
       entity_id: light.zg2m_frontdoor_lights
   mode: single
 - id: '1770908139608'
-  alias: Oprit voordeur lampen uit  - persoondetectie
+  alias: Oprit voordeur lampen uit  - zon
   description: Turn lights on when there isnt a person detected anymore by the driveway
     camera
   triggers:
-  - entity_id: binary_sensor.hallway_motion_sensor_occupancy
-    trigger: state
-    to: 'off'
-    for:
-      minutes: 6
-  conditions:
-  - condition: time
-    after: 05:00:00
-  - condition: time
-    before: '12:00:00'
+  - trigger: sun.sunrise
+    options:
+      offset:
+        days: 0
+        hours: 0
+        minutes: 0
+        seconds: 0
+      offset_type: before
+  conditions: []
   actions:
   - data:
       transition: 1
@@ -706,9 +694,10 @@
     to: 'off'
   conditions: []
   actions:
-  - data:
-      entity_id: light.zg2m_hallway_lights
+  - data: {}
     action: light.turn_off
+    target:
+      entity_id: light.zg2m_hallway_lights
   mode: single
 - id: '1770972119565'
   alias: Gang lampen aan - beweging
@@ -724,12 +713,13 @@
     attribute: elevation
   actions:
   - data:
-      entity_id: light.zg2m_hallway_lights
-      brightness_pct: 32
+      brightness_pct: 30
     action: light.turn_on
+    target:
+      entity_id: light.zg2m_hallway_lights
   mode: single
 - id: '1770972189138'
-  alias: Schuur lampen aan - beweging
+  alias: Schuur lamp aan - beweging
   description: ''
   triggers:
   - entity_id: binary_sensor.shed_motion_sensor_occupancy
@@ -737,12 +727,13 @@
     to: 'on'
   conditions: []
   actions:
-  - data:
-      entity_id: light.shed_light
+  - data: {}
     action: light.turn_on
+    target:
+      entity_id: light.shed_light
   mode: single
 - id: '1770972236940'
-  alias: Schuur lampen uit - beweging
+  alias: Schuur lamp uit - beweging
   description: ''
   triggers:
   - entity_id: binary_sensor.shed_motion_sensor_occupancy
@@ -752,9 +743,10 @@
       minutes: 1
   conditions: []
   actions:
-  - data:
-      entity_id: light.shed_light
+  - data: {}
     action: light.turn_off
+    target:
+      entity_id: light.shed_light
   mode: single
 - id: '1770972334718'
   alias: Schuur lamp aan - knop
@@ -767,9 +759,10 @@
     trigger: device
   conditions: []
   actions:
-  - data:
-      entity_id: light.shed_light
+  - data: {}
     action: light.turn_on
+    target:
+      entity_id: light.shed_light
   mode: single
 - id: '1770972394071'
   alias: Schuur lamp uit - knop
@@ -782,9 +775,10 @@
     trigger: device
   conditions: []
   actions:
-  - data:
-      entity_id: light.shed_light
+  - data: {}
     action: light.turn_off
+    target:
+      entity_id: light.shed_light
   mode: single
 - id: '1770972578932'
   alias: Systeem killswitch alle lampen uit
@@ -794,36 +788,52 @@
     at: 02:00:00
   conditions: []
   actions:
-  - data:
+  - data: {}
+    action: light.turn_off
+    target:
       entity_id: light.zg2m_living_room_lights
+  - data: {}
     action: light.turn_off
-  - data:
+    target:
       entity_id: light.zg2m_kitchen_lights
-    action: light.turn_off
   - delay:
       seconds: 2
-  - data:
+  - data: {}
+    action: light.turn_off
+    target:
       entity_id: light.zg2m_hallway_lights
+  - data: {}
     action: light.turn_off
-  - data:
-      entity_id: lights.zg2m_office_lights
-    action: light.turn_off
-  - delay:
-      seconds: 2
-  - data:
-      entity_id: light.backyard_spots
-    action: light.turn_off
-  - data:
-      entity_id: light.shed_light
-    action: light.turn_off
-  - delay:
-      seconds: 2
-  - data:
-      entity_id: light.wled_living_room
-    action: light.turn_off
-  - data:
+    target:
       entity_id: light.wled_office
+  - data: {}
     action: light.turn_off
+    target:
+      entity_id: light.zg2m_office_lights
+  - delay:
+      seconds: 2
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.backyard_spots
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.shed_light
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.zg2m_backyard_standing_lights
+  - delay:
+      seconds: 2
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.wled_living_room
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.zg2m_frontdoor_lights
   mode: single
 - id: '1770972726077'
   alias: Systeem recorder purge database
