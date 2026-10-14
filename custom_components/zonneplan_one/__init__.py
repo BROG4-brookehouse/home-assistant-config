@@ -1,12 +1,21 @@
 """The Zonneplan integration."""
 
 import logging
+from datetime import timedelta
 
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
+)
+from homeassistant.helpers import (
+    device_registry as dr,
+)
+from homeassistant.helpers import (
+    entity_registry as er,
 )
 
 from . import api, config_flow
@@ -18,7 +27,9 @@ from .const import (
     DOMAIN,
     ELECTRICITY,
     ELECTRICITY_HOME_CONSUMPTION,
+    ELECTRICITY_PRICES,
     GAS,
+    GAS_PRICES,
     P1_ELECTRICITY,
     P1_GAS,
     P1_INSTALL,
@@ -40,17 +51,24 @@ from .coordinators.electricity_data_coordinator import ElectricityDataUpdateCoor
 from .coordinators.electricity_home_consumption_data_coordinator import (
     ElectricityHomeConsumptionDataUpdateCoordinator,
 )
+from .coordinators.electricity_prices_data_coordinator import ElectricityPricesDataUpdateCoordinator
 from .coordinators.gas_data_coordinator import GasDataUpdateCoordinator
+from .coordinators.gas_prices_data_coordinator import GasPricesDataUpdateCoordinator
 from .coordinators.pv_data_coordinator import PvDataUpdateCoordinator
 from .coordinators.summary_data_coordinator import SummaryDataUpdateCoordinator
+from .services import async_setup_fetch_statistics_service
 
 PLATFORMS = [
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.DATETIME,
     Platform.NUMBER,
     Platform.SELECT,
 ]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,10 +85,12 @@ async def async_setup(
         api.ZonneplanOAuth2Implementation(api.AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass))),
     )
 
+    async_setup_fetch_statistics_service(hass)
+
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ZonneplanConfigEntry) -> bool:  # noqa: PLR0912
+async def async_setup_entry(hass: HomeAssistant, entry: ZonneplanConfigEntry) -> bool:  # noqa: PLR0912 PLR0915
     """Set up Zonneplan from a config entry."""
     implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(hass, entry)
 
@@ -89,11 +109,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZonneplanConfigEntry) ->
 
             contracts = {}
             for contract in connection["contracts"]:
+                # Filter out ended contracts
+                try:
+                    end_data = contract["end_date"] and dt_util.parse_datetime(contract["end_date"])
+                    if end_data and end_data < dt_util.now():
+                        _LOGGER.info("Skipping ended contract %s (ended at %s)", contract["type"], end_data)
+                        continue
+                except ValueError:
+                    _LOGGER.warning("Could not parse end_date: %s", contract["end_date"])
+
                 if contract["type"] not in contracts:
                     contracts[contract["type"]] = []
                 contracts[contract["type"]].append(contract)
 
             if ELECTRICITY in contracts:
+                account_coordinator.add_coordinator(
+                    connection["uuid"],
+                    ELECTRICITY_PRICES,
+                    ElectricityPricesDataUpdateCoordinator(
+                        hass,
+                        zonneplan_api,
+                        address_group["uuid"],
+                        connection["uuid"],
+                        contracts[ELECTRICITY][0],
+                    ),
+                )
                 account_coordinator.add_coordinator(
                     connection["uuid"],
                     ELECTRICITY,
@@ -109,8 +149,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZonneplanConfigEntry) ->
             if GAS in contracts:
                 account_coordinator.add_coordinator(
                     connection["uuid"],
-                    GAS,
-                    SummaryDataUpdateCoordinator(
+                    GAS_PRICES,
+                    GasPricesDataUpdateCoordinator(
                         hass,
                         zonneplan_api,
                         address_group["uuid"],
@@ -147,9 +187,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZonneplanConfigEntry) ->
 
                 gas_meter_registered = False
                 for contract in contracts[P1_INSTALL]:
-                    if contract.get("meta", {}).get("gas_last_measured_at"):
-                        gas_meter_registered = True
-                        break
+                    gas_last_measured_at = contract.get("meta", {}).get("gas_last_measured_at")
+                    if gas_last_measured_at:
+                        # Check if gas_last_measured_at is not older than 1 week
+                        try:
+                            last_measured_dt = dt_util.parse_datetime(gas_last_measured_at)
+                            if last_measured_dt and (dt_util.now() - last_measured_dt <= timedelta(weeks=1)):
+                                gas_meter_registered = True
+                                break
+                            if last_measured_dt:
+                                _LOGGER.info("Skipped GAS because last measured value (%s) is older than 1 week", gas_last_measured_at)
+                        except ValueError:
+                            _LOGGER.warning("Could not parse gas_last_measured_at: %s", gas_last_measured_at)
 
                 if gas_meter_registered:
                     account_coordinator.add_coordinator(
@@ -224,6 +273,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZonneplanConfigEntry) ->
                 )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Clean up unused device entries with no entities
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    device_entries = dr.async_entries_for_config_entry(device_registry, config_entry_id=entry.entry_id)
+    for dev in device_entries:
+        dev_entities = er.async_entries_for_device(entity_registry, dev.id, include_disabled_entities=True)
+        if not dev_entities:
+            _LOGGER.info("Removing obsolete device entry %s", dev.name)
+            device_registry.async_remove_device(dev.id)
 
     return True
 

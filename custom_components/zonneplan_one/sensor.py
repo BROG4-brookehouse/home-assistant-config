@@ -8,19 +8,17 @@ from typing import Any
 
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
 )
-from pytz import timezone
 
 from .const import (
     BATTERY,
@@ -30,13 +28,15 @@ from .const import (
     DOMAIN,
     ELECTRICITY,
     ELECTRICITY_HOME_CONSUMPTION,
-    GAS,
+    ELECTRICITY_PRICES,
+    GAS_PRICES,
     NONE_IS_ZERO,
     NONE_USE_PREVIOUS,
     P1_ELECTRICITY,
     P1_GAS,
     PV_INSTALL,
     SENSOR_TYPES,
+    ZONNEPLAN_API_TIME_ZONE,
     ZonneplanSensorEntityDescription,
 )
 from .coordinators.account_data_coordinator import (
@@ -55,7 +55,9 @@ from .coordinators.electricity_data_coordinator import ElectricityDataUpdateCoor
 from .coordinators.electricity_home_consumption_data_coordinator import (
     ElectricityHomeConsumptionDataUpdateCoordinator,
 )
+from .coordinators.electricity_prices_data_coordinator import ElectricityPricesDataUpdateCoordinator
 from .coordinators.gas_data_coordinator import GasDataUpdateCoordinator
+from .coordinators.gas_prices_data_coordinator import GasPricesDataUpdateCoordinator
 from .coordinators.pv_data_coordinator import PvDataUpdateCoordinator
 from .coordinators.summary_data_coordinator import SummaryDataUpdateCoordinator
 from .coordinators.zonneplan_data_update_coordinator import (
@@ -70,6 +72,8 @@ from .entity import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -164,7 +168,7 @@ async def async_setup_entry(
 async def add_electricity_sensors(
     entities: list[Any], connection: ConnectionCoordinators, uuid: str, hass: HomeAssistant, other_connection_uuids: list[str]
 ) -> None:
-    if not connection.electricity:
+    if not connection.electricity or not connection.electricity_prices:
         return
 
     entities.extend(
@@ -178,35 +182,49 @@ async def add_electricity_sensors(
         for sensor_key in SENSOR_TYPES[ELECTRICITY]
     )
 
+    entities.extend(
+        ZonneplanElectricitySensor(
+            uuid,
+            sensor_key,
+            connection.electricity_prices,
+            -1,
+            SENSOR_TYPES[ELECTRICITY_PRICES][sensor_key],
+        )
+        for sensor_key in SENSOR_TYPES[ELECTRICITY_PRICES]
+    )
+
+    """Migrate typo in forecast_ sensor keys."""
+    for sensor_key in SENSOR_TYPES[ELECTRICITY_PRICES]:
+        if sensor_key.startswith("forecast_"):
+            _migrate_to_new_unique_id(hass, f"{uuid}_{sensor_key}", f"{uuid}_{sensor_key.replace('forecast_', 'forcast_')}")
+
     """Migrate old unique ids to new unique ids."""
     for other_connection_uud in other_connection_uuids:
-        for sensor_key in SENSOR_TYPES[ELECTRICITY]:
+        for sensor_key in SENSOR_TYPES[ELECTRICITY_PRICES]:
             _migrate_to_new_unique_id(hass, f"{uuid}_{sensor_key}", f"{other_connection_uud}_{sensor_key}")
 
     """Migrate current_tariff to current_electricity_tariff"""
     _migrate_to_new_unique_id(hass, f"{uuid}_current_electricity_tariff", f"{uuid}_current_tariff")
 
 
-async def add_gas_sensors(
-    entities: list[Any], connection: ConnectionCoordinators, uuid: str, hass: HomeAssistant, other_connection_uuids: list[str]
-) -> None:
-    if not connection.gas:
+async def add_gas_sensors(entities: list[Any], connection: ConnectionCoordinators, uuid: str, hass: HomeAssistant, other_connection_uuids: list[str]) -> None:
+    if not connection.gas_prices:
         return
 
     entities.extend(
         ZonneplanGasSensor(
             uuid,
             sensor_key,
-            connection.gas,
+            connection.gas_prices,
             -1,
-            SENSOR_TYPES[GAS][sensor_key],
+            SENSOR_TYPES[GAS_PRICES][sensor_key],
         )
-        for sensor_key in SENSOR_TYPES[GAS]
+        for sensor_key in SENSOR_TYPES[GAS_PRICES]
     )
 
     """Migrate old unique ids to new unique ids."""
     for other_connection_uud in other_connection_uuids:
-        for sensor_key in SENSOR_TYPES[GAS]:
+        for sensor_key in SENSOR_TYPES[GAS_PRICES]:
             _migrate_to_new_unique_id(hass, f"{uuid}_{sensor_key}", f"{other_connection_uud}_{sensor_key}")
 
 
@@ -321,7 +339,7 @@ def _migrate_to_new_unique_id(hass: HomeAssistant, new_unique_id: str, old_uniqu
         _LOGGER.debug("No old entity found to migrate")
 
 
-class ZonneplanSensor(CoordinatorEntity, RestoreEntity, SensorEntity, ABC):
+class ZonneplanSensor(CoordinatorEntity, RestoreSensor, ABC):
     """Abstract class for a zonneplan sensor."""
 
     coordinator: ZonneplanDataUpdateCoordinator
@@ -343,6 +361,12 @@ class ZonneplanSensor(CoordinatorEntity, RestoreEntity, SensorEntity, ABC):
         self._install_index = install_index
         self.entity_description = description
 
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+
+        if restored_data := await self.async_get_last_sensor_data():
+            self._attr_native_value = restored_data.native_value
+
     @property
     @abstractmethod
     def install_uuid(self) -> str:
@@ -352,11 +376,6 @@ class ZonneplanSensor(CoordinatorEntity, RestoreEntity, SensorEntity, ABC):
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self.install_uuid + "_" + self._sensor_key
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity and coordinator.data is available."""
-        return super().available and self.coordinator.data is not None
 
     @property
     def last_reset(self) -> datetime | None:
@@ -381,59 +400,10 @@ class ZonneplanSensor(CoordinatorEntity, RestoreEntity, SensorEntity, ABC):
         if value is None and self.entity_description.none_value_behaviour == NONE_USE_PREVIOUS:
             return
 
-        if self.skip_update_based_on_daily_update_hour():
-            _LOGGER.info(
-                "Skip update %s until %sh",
-                self.unique_id,
-                self.entity_description.daily_update_hour,
-            )
-            return
-
         _LOGGER.debug("Update %s: %s", self.unique_id, value)
 
         self._attr_native_value = value
         self.async_write_ha_state()
-
-    def skip_update_based_on_daily_update_hour(self) -> bool:
-        if self.entity_description.daily_update_hour is None:
-            return False
-
-        # No state? then we update
-        if not (state := self.hass.states.get(self.entity_id)):
-            return False
-
-        # No last update value? then we update
-        if not state.last_updated or not self.native_value:
-            return False
-
-        update_today = dt_util.now().replace(
-            hour=self.entity_description.daily_update_hour,
-            minute=0,
-            second=0,
-            microsecond=0,
-        )
-
-        # Is it time already to update the value today? No then we skip
-        if update_today > dt_util.now():
-            _LOGGER.debug(
-                "Skipped update %s: %s (update today) > %s (now)",
-                self.unique_id,
-                update_today,
-                dt_util.now(),
-            )
-            return True
-
-        # Already updated today after daily_update_hour? Then skip
-        if dt_util.as_local(state.last_updated) >= update_today:
-            _LOGGER.debug(
-                "Skipped update %s: %s (last update) >= %s (update today)",
-                self.unique_id,
-                dt_util.as_local(state.last_updated),
-                update_today,
-            )
-            return True
-
-        return False
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -468,9 +438,9 @@ class ZonneplanSensor(CoordinatorEntity, RestoreEntity, SensorEntity, ABC):
                 if isinstance(value, str):
                     value = dt_util.parse_datetime(value)
                 elif value > 100000000000000:  # noqa: PLR2004
-                    value = datetime.fromtimestamp(value / 1000000, timezone("Europe/Amsterdam"))
+                    value = datetime.fromtimestamp(value / 1000000, ZONNEPLAN_API_TIME_ZONE)
                 else:
-                    value = datetime.fromtimestamp(value / 1000, timezone("Europe/Amsterdam"))
+                    value = datetime.fromtimestamp(value / 1000, ZONNEPLAN_API_TIME_ZONE)
 
             if self.entity_description.value_factor:
                 value = value * self.entity_description.value_factor
@@ -481,13 +451,14 @@ class ZonneplanSensor(CoordinatorEntity, RestoreEntity, SensorEntity, ABC):
 
 
 class ZonneplanElectricitySensor(ZonneplanSensor):
-    coordinator: SummaryDataUpdateCoordinator
+    coordinator: SummaryDataUpdateCoordinator | ElectricityPricesDataUpdateCoordinator
+    _unrecorded_attributes = frozenset({"forecast"})
 
     def __init__(
         self,
         connection_uuid: str,
         sensor_key: str,
-        coordinator: ZonneplanDataUpdateCoordinator,
+        coordinator: ZonneplanDataUpdateCoordinator | ElectricityPricesDataUpdateCoordinator,
         install_index: int,
         description: ZonneplanSensorEntityDescription,
     ) -> None:
@@ -512,7 +483,8 @@ class ZonneplanElectricitySensor(ZonneplanSensor):
 
 
 class ZonneplanGasSensor(ZonneplanSensor):
-    coordinator: SummaryDataUpdateCoordinator
+    coordinator: GasPricesDataUpdateCoordinator
+    _unrecorded_attributes = frozenset({"forecast"})
 
     def __init__(
         self,

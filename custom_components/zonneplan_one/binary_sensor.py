@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
 )
@@ -31,6 +30,8 @@ from .coordinators.zonneplan_data_update_coordinator import (
 from .entity import BatteryEntity, ChargePointEntity, PvEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -82,7 +83,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ZonneplanBinarySensor(CoordinatorEntity, RestoreEntity, BinarySensorEntity):
+class ZonneplanBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Abstract class for a Zonneplan Binary Sensor."""
 
     coordinator: ZonneplanDataUpdateCoordinator

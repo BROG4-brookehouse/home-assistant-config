@@ -41,6 +41,7 @@ from .sensors import (
     ATTR_GROUP,
     ATTR_TIMEOUT,
     SENSOR_TYPES,
+    ATTR_DELAY_ON,
     ATTR_ENTITIES,
     ATTR_GROUP_ID,
     ATTR_ALWAYS_ON,
@@ -235,6 +236,7 @@ class AlarmoSensorView(HomeAssistantView):
                 vol.Optional(const.ATTR_ENABLED): cv.boolean,
                 vol.Optional(ATTR_GROUP): vol.Any(cv.string, None),
                 vol.Optional(ATTR_ENTRY_DELAY): vol.Any(cv.positive_int, None),
+                vol.Optional(ATTR_DELAY_ON): vol.Any(cv.positive_int, None),
                 vol.Optional(ATTR_NEW_ENTITY_ID): cv.string,
             }
         )
@@ -282,7 +284,7 @@ class AlarmoUserView(HomeAssistantView):
         if const.ATTR_USER_ID in data:
             user_id = data[const.ATTR_USER_ID]
             del data[const.ATTR_USER_ID]
-        err = coordinator.async_update_user_config(user_id, data)
+        err = await coordinator.async_update_user_config(user_id, data)
         async_dispatcher_send(hass, "alarmo_update_frontend")
         return self.json({"success": not isinstance(err, str), "error": err})
 

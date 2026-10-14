@@ -1,5 +1,5 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 from http import HTTPStatus
 
 from aiohttp.client_exceptions import ClientResponseError
@@ -10,6 +10,7 @@ from homeassistant.helpers.debounce import Debouncer
 from ..api import AsyncConfigEntryAuth
 from ..const import DOMAIN
 from ..zonneplan_api.types import ZonneplanContract
+from .statistics import ElectricityStatisticsService
 from .zonneplan_data_update_coordinator import ZonneplanDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ class ElectricityDataUpdateCoordinator(ZonneplanDataUpdateCoordinator):
     address_uuid: str
     connection_uuid: str
     contracts: list[ZonneplanContract]
+    _statistics_service: ElectricityStatisticsService
 
     def __init__(
         self,
@@ -45,6 +47,13 @@ class ElectricityDataUpdateCoordinator(ZonneplanDataUpdateCoordinator):
         self.address_uuid = address_uuid
         self.connection_uuid = connection_uuid
         self.contracts = contracts
+        self._statistics_service = ElectricityStatisticsService(
+            hass=self.hass,
+            api=self.api,
+            connection_uuid=self.connection_uuid,
+            delivered_id=self.electricity_delivered_id,
+            produced_id=self.electricity_produced_id,
+        )
 
     async def _async_update_data(self) -> dict:
         """Fetch the latest status."""
@@ -57,5 +66,20 @@ class ElectricityDataUpdateCoordinator(ZonneplanDataUpdateCoordinator):
             raise
         else:
             _LOGGER.debug("Update electricity data: %s", electricity)
+            if electricity:
+                _LOGGER.debug("Process stats for %s", [self.electricity_delivered_id, self.electricity_produced_id])
+                await self._statistics_service.process_payload(electricity)
 
             return electricity or self.data
+
+    @property
+    def electricity_delivered_id(self) -> str:
+        return f"{DOMAIN}:electricity_delivered_{self.connection_uuid.replace('-', '_')}"
+
+    @property
+    def electricity_produced_id(self) -> str:
+        return f"{DOMAIN}:electricity_produced_{self.connection_uuid.replace('-', '_')}"
+
+    async def async_backfill_statistics(self, start_date: datetime) -> None:
+        """Backfill statistics from start_date until now."""
+        await self._statistics_service.async_backfill_from(start_date)

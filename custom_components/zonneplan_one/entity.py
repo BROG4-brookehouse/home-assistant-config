@@ -1,4 +1,4 @@
-"""Zonneplan Battery Entity."""
+"""Zonneplan Base Entity."""
 
 from typing import Protocol
 
@@ -78,7 +78,7 @@ class BatteryEntity:
         return {
             "identifiers": {(DOMAIN, self.install_uuid)},
             "name": self.coordinator.contract["label"],
-            "model": self.coordinator.contract["label"],
+            "model": self.coordinator.contract.get("meta", {}).get("host_device_model_name"),
             "serial_number": self.coordinator.contract.get("meta", {}).get("identifier"),
         }
 
@@ -98,7 +98,7 @@ class ChargePointEntity:
             "identifiers": {(DOMAIN, self.install_uuid)},
             "manufacturer": "Zonneplan",
             "name": self.coordinator.contract["label"],
-            "model": self.coordinator.contract["label"],
+            "model": self.coordinator.contract.get("meta", {}).get("charge_point_model_name"),
             "serial_number": self.coordinator.contract.get("meta", {}).get("serial_number"),
         }
 
@@ -124,18 +124,16 @@ class PvEntity:
                 f" ({self._install_index + 1})" if self._install_index and self._install_index > 0 else ""
             )
             device_info["model"] = (
-                self.coordinator.contracts[self._install_index]["label"]
+                self.coordinator.contracts[self._install_index]["meta"].get("inverter_model_name", "")
                 + " "
                 + str(self.coordinator.contracts[self._install_index]["meta"].get("panel_count", ""))
-                + " panels"
+                + " x "
+                + str(self.coordinator.contracts[self._install_index]["meta"].get("panel_wp", ""))
+                + "Wp"
             )
             device_info["serial_number"] = self.coordinator.contracts[self._install_index]["meta"].get("sgn_serial_number", "")
-            device_info["sw_version"] = (
-                self.coordinator.contracts[self._install_index]["meta"].get("module_firmware_version", "") or "unknown"
-            )
-            device_info["hw_version"] = (
-                self.coordinator.contracts[self._install_index]["meta"].get("inverter_firmware_version", "") or "unknown"
-            )
+            device_info["sw_version"] = self.coordinator.contracts[self._install_index]["meta"].get("module_firmware_version", "") or "unknown"
+            device_info["hw_version"] = self.coordinator.contracts[self._install_index]["meta"].get("inverter_firmware_version", "") or "unknown"
 
         return device_info
 

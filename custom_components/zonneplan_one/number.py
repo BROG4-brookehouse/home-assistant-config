@@ -8,17 +8,21 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    BATTERY,
     BATTERY_CONTROL,
+    CHARGE_POINT,
     NUMBER_TYPES,
     ZonneplanNumberEntityDescription,
 )
 from .coordinators.account_data_coordinator import ZonneplanConfigEntry
-from .coordinators.battery_control_data_coordinator import (
-    BatteryControlDataUpdateCoordinator,
-)
-from .entity import BatteryEntity
+from .coordinators.battery_control_data_coordinator import BatteryControlDataUpdateCoordinator
+from .coordinators.battery_data_coordinator import BatteryDataUpdateCoordinator
+from .coordinators.charge_point_data_coordinator import ChargePointDataUpdateCoordinator
+from .entity import BatteryEntity, ChargePointEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -32,7 +36,7 @@ async def async_setup_entry(
             _LOGGER.debug("Setup battery control number entities for connection %s", uuid)
 
             entities.extend(
-                ZonneplanBatteryNumber(
+                ZonneplanBatteryControlNumber(
                     uuid,
                     sensor_key,
                     connection.battery_control,
@@ -42,10 +46,38 @@ async def async_setup_entry(
                 for sensor_key in NUMBER_TYPES[BATTERY_CONTROL]
             )
 
+        if connection.home_battery_installation:
+            _LOGGER.debug("Setup battery number entities for connection %s", uuid)
+
+            entities.extend(
+                ZonneplanReserveDischargeNumber(
+                    uuid,
+                    sensor_key,
+                    connection.home_battery_installation,
+                    0,
+                    NUMBER_TYPES[BATTERY][sensor_key],
+                )
+                for sensor_key in NUMBER_TYPES[BATTERY]
+            )
+
+        if connection.charge_point_installation:
+            _LOGGER.debug("Setup charge point number entities for connection %s", uuid)
+
+            entities.extend(
+                CHARGE_POINT_NUMBER_ENTITY_CLASSES[sensor_key](
+                    uuid,
+                    sensor_key,
+                    connection.charge_point_installation,
+                    0,
+                    NUMBER_TYPES[CHARGE_POINT][sensor_key],
+                )
+                for sensor_key in NUMBER_TYPES[CHARGE_POINT]
+            )
+
     async_add_entities(entities)
 
 
-class ZonneplanBatteryNumber(BatteryEntity, CoordinatorEntity, NumberEntity):
+class ZonneplanBatteryControlNumber(BatteryEntity, CoordinatorEntity, NumberEntity):
     coordinator: BatteryControlDataUpdateCoordinator
     _connection_uuid: str
     _install_index: int
@@ -113,3 +145,196 @@ class ZonneplanBatteryNumber(BatteryEntity, CoordinatorEntity, NumberEntity):
         )
 
         await self.coordinator.async_enable_home_optimization()
+
+
+class ZonneplanReserveDischargeNumber(BatteryEntity, CoordinatorEntity, NumberEntity):
+    coordinator: BatteryDataUpdateCoordinator
+    _connection_uuid: str
+    _install_index: int
+    _key: str
+    entity_description: ZonneplanNumberEntityDescription
+
+    def __init__(
+        self,
+        connection_uuid: str,
+        _key: str,
+        coordinator: BatteryDataUpdateCoordinator,
+        install_index: int,
+        description: ZonneplanNumberEntityDescription,
+    ) -> None:
+        """Initialize the button."""
+        super().__init__(coordinator)
+        self._connection_uuid = connection_uuid
+        self._install_index = install_index
+        self._key = _key
+        self.entity_description = description
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        return self.install_uuid + "_" + self._key
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if not self.coordinator.data or not self.coordinator.last_update_success:
+            return False
+
+        backup_power_capable_key = "contracts.{install_index}.meta.backup_power_capable"
+
+        return bool(self.coordinator.get_data_value(backup_power_capable_key.format(install_index=self._install_index)))
+
+    @property
+    def native_min_value(self) -> float:
+        return 0
+
+    @property
+    def native_max_value(self) -> float:
+        return float(
+            self.coordinator.get_data_value(
+                f"contracts.{self._install_index}.meta.backup_power_usable_capacity_wh",
+            )
+            or 3000
+        )
+
+    @property
+    def native_value(self) -> float:
+        return self.coordinator.get_data_value(
+            self.entity_description.key.format(install_index=self._install_index),
+        )
+
+    async def async_set_native_value(self, value: float) -> None:
+        self.coordinator.set_data_value(
+            self.entity_description.key.format(install_index=self._install_index),
+            int(value),
+        )
+
+        await self.coordinator.async_set_reserve_discharge(int(value))
+
+
+class ZonneplanDynamicChargeDesiredPercentageNumber(ChargePointEntity, CoordinatorEntity, NumberEntity):
+    coordinator: ChargePointDataUpdateCoordinator
+    _connection_uuid: str
+    _install_index: int
+    _key: str
+    entity_description: ZonneplanNumberEntityDescription
+
+    def __init__(
+        self,
+        connection_uuid: str,
+        _key: str,
+        coordinator: ChargePointDataUpdateCoordinator,
+        install_index: int,
+        description: ZonneplanNumberEntityDescription,
+    ) -> None:
+        """Initialize the button."""
+        super().__init__(coordinator)
+        self._connection_uuid = connection_uuid
+        self._install_index = install_index
+        self._key = _key
+        self.entity_description = description
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        return self.install_uuid + "_" + self._key
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if not self.coordinator.data or not self.coordinator.last_update_success:
+            return False
+
+        state = self.coordinator.get_data_value("state")
+
+        if not state or not state["connectivity_state"]:
+            return False
+
+        return "processing" not in state
+
+    @property
+    def native_value(self) -> float:
+        value = self.coordinator.get_data_value(
+            self.entity_description.key.format(install_index=self._install_index),
+        )
+        if not value or not isinstance(value, int):
+            value = 0
+
+        return value * (self.entity_description.value_factor or 1)
+
+    async def async_set_native_value(self, value: float) -> None:
+        self.coordinator.set_data_value(
+            self.entity_description.key.format(install_index=self._install_index),
+            int(value / (self.entity_description.value_factor or 1)),
+        )
+
+        await self.coordinator.async_dynamic_charge(edited_unit="percentage")
+
+
+class ZonneplanDynamicChargeDesiredKilometers(ChargePointEntity, CoordinatorEntity, NumberEntity):
+    coordinator: ChargePointDataUpdateCoordinator
+    _connection_uuid: str
+    _install_index: int
+    _key: str
+    entity_description: ZonneplanNumberEntityDescription
+
+    def __init__(
+        self,
+        connection_uuid: str,
+        _key: str,
+        coordinator: ChargePointDataUpdateCoordinator,
+        install_index: int,
+        description: ZonneplanNumberEntityDescription,
+    ) -> None:
+        """Initialize the button."""
+        super().__init__(coordinator)
+        self._connection_uuid = connection_uuid
+        self._install_index = install_index
+        self._key = _key
+        self.entity_description = description
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        return self.install_uuid + "_" + self._key
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if not self.coordinator.data or not self.coordinator.last_update_success:
+            return False
+
+        state = self.coordinator.get_data_value("state")
+
+        if not state or not state["connectivity_state"]:
+            return False
+
+        return "processing" not in state
+
+    @property
+    def native_max_value(self) -> float:
+        return self.coordinator.get_max_desired_kilometers() or self.entity_description.native_max_value
+
+    @property
+    def native_value(self) -> float:
+        value = self.coordinator.get_data_value(
+            self.entity_description.key.format(install_index=self._install_index),
+        )
+        if not value or not isinstance(value, int):
+            value = 0
+
+        return value * (self.entity_description.value_factor or 1)
+
+    async def async_set_native_value(self, value: float) -> None:
+        self.coordinator.set_data_value(
+            self.entity_description.key.format(install_index=self._install_index),
+            int(value / (self.entity_description.value_factor or 1)),
+        )
+
+        await self.coordinator.async_dynamic_charge(edited_unit="kilometers")
+
+
+CHARGE_POINT_NUMBER_ENTITY_CLASSES = {
+    "dynamic_charging_user_constraints.desired_additional_battery_percentage": ZonneplanDynamicChargeDesiredPercentageNumber,
+    "dynamic_charging_user_constraints.desired_distance_in_kilometers": ZonneplanDynamicChargeDesiredKilometers,
+}

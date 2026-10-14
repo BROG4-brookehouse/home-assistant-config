@@ -1,0 +1,9 @@
+- platform: rest
+  name: palworld_players
+  resource: !secret palworld_server_resource_players_ip
+  method: GET
+  authentication: basic
+  username: admin
+  password: !secret palworld_server_admin_password
+  value_template: "{{ value_json.players | length }}"
+  scan_interval: 30

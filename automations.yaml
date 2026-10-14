@@ -1,0 +1,1181 @@
+- id: '1770743450476'
+  alias: Keuken lampen toggle - knop
+  description: ''
+  triggers:
+  - domain: mqtt
+    device_id: bb82727083e386f905ad52165ab829f5
+    type: action
+    subtype: 'on'
+    trigger: device
+  conditions: []
+  actions:
+  - action: light.toggle
+    metadata: {}
+    target:
+      entity_id: light.zg2m_kitchen_lights
+    data: {}
+  mode: single
+- id: '1770746150187'
+  alias: Keuken lampen helderheid omhoog - knop
+  description: ''
+  triggers:
+  - domain: mqtt
+    device_id: bb82727083e386f905ad52165ab829f5
+    type: action
+    subtype: brightness_step_up
+    trigger: device
+  conditions: []
+  actions:
+  - action: light.turn_on
+    metadata: {}
+    target:
+      entity_id: light.zg2m_kitchen_lights
+    data:
+      brightness_step_pct: 10
+  mode: single
+- id: '1770746302439'
+  alias: Keuken lampen helderheid omlaag - knop
+  description: ''
+  triggers:
+  - domain: mqtt
+    device_id: bb82727083e386f905ad52165ab829f5
+    type: action
+    subtype: brightness_step_down
+    trigger: device
+  conditions: []
+  actions:
+  - action: light.turn_on
+    metadata: {}
+    target:
+      entity_id: light.zg2m_kitchen_lights
+    data:
+      brightness_step_pct: -10
+  mode: single
+- id: '1770753405757'
+  alias: Woonkamer lampen toggle - knop
+  description: ''
+  triggers:
+  - domain: mqtt
+    device_id: ff9e223247ca4b341fbcd7adaa1be632
+    type: action
+    subtype: toggle
+    trigger: device
+  conditions: []
+  actions:
+  - action: light.toggle
+    metadata: {}
+    target:
+      entity_id: light.zg2m_living_room_lights
+    data: {}
+  - action: light.turn_off
+    metadata: {}
+    target:
+      entity_id: light.wled_living_room
+    data: {}
+  mode: single
+- id: '1770753509141'
+  alias: Woonkamer activeer film scene - knop
+  description: ''
+  triggers:
+  - domain: mqtt
+    device_id: ff9e223247ca4b341fbcd7adaa1be632
+    type: action
+    subtype: arrow_left_click
+    trigger: device
+  conditions: []
+  actions:
+  - action: scene.turn_on
+    metadata: {}
+    target:
+      entity_id: scene.film_scene
+    data: {}
+  mode: single
+- id: '1770753612663'
+  alias: Woonkamer activeer standaard licht mode - knop
+  description: ''
+  triggers:
+  - domain: mqtt
+    device_id: ff9e223247ca4b341fbcd7adaa1be632
+    type: action
+    subtype: arrow_right_click
+    trigger: device
+  conditions: []
+  actions:
+  - action: scene.turn_on
+    metadata: {}
+    target:
+      entity_id: scene.woonkamer_standaard_licht_scene
+    data: {}
+  mode: single
+- id: '1770754284761'
+  alias: Woonkamer activeer standaard licht mode - exit mediaspeler
+  description: Activeer de standaard licht mode wanneer de media klaar is met spelen
+  triggers:
+  - trigger: state
+    entity_id: media_player.shield
+    from: playing
+  conditions:
+  - condition: numeric_state
+    below: 5
+    entity_id: sun.sun
+    attribute: elevation
+  actions:
+  - action: scene.turn_on
+    metadata: {}
+    target:
+      entity_id: scene.woonkamer_standaard_licht_scene
+    data:
+      transition: 5
+  mode: single
+- id: '1770754432469'
+  alias: Woonkamer activeer film scene - start mediaspeler
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - media_player.shield
+    to: playing
+  conditions:
+  - condition: sun
+    after: sunset
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: media_player.shield
+      attribute: app_name
+      state: Netflix
+    - condition: state
+      entity_id: media_player.shield
+      attribute: app_name
+      state: Kodi
+    - condition: state
+      entity_id: media_player.shield
+      attribute: app_name
+      state:
+      - Plex
+    - condition: state
+      entity_id: media_player.shield
+      attribute: app_name
+      state:
+      - Wholphin
+  actions:
+  - action: scene.turn_on
+    metadata: {}
+    target:
+      entity_id: scene.film_scene
+    data:
+      transition: 4
+  mode: restart
+- id: '1770790726944'
+  alias: Woonkamer lampen aan - beweging
+  description: ''
+  triggers:
+  - entity_id: binary_sensor.living_room_motion_sensor_occupancy
+    trigger: state
+    to: 'on'
+  conditions:
+  - condition: and
+    conditions:
+    - condition: numeric_state
+      entity_id: sun.sun
+      attribute: elevation
+      below: 4
+    - condition: not
+      conditions:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: media_player.shield
+          attribute: app_name
+          state: Netflix
+        - condition: state
+          entity_id: media_player.shield
+          attribute: app_name
+          state: Kodi
+        - condition: state
+          entity_id: media_player.shield
+          attribute: app_name
+          state:
+          - Plex
+        - condition: state
+          entity_id: media_player.shield
+          attribute: app_name
+          state:
+          - Wholphin
+  actions:
+  - action: scene.turn_on
+    metadata: {}
+    target:
+      entity_id: scene.woonkamer_standaard_licht_scene
+    data: {}
+  mode: single
+- id: '1770791075139'
+  alias: Woonkamer lampen uit - beweging
+  description: ''
+  triggers:
+  - entity_id: binary_sensor.living_room_motion_sensor_occupancy
+    trigger: state
+    to: 'off'
+    for:
+      minutes: 20
+  conditions:
+  - condition: not
+    conditions:
+    - condition: state
+      entity_id: media_player.shield
+      state:
+      - playing
+  actions:
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id:
+      - light.zg2m_living_room_lights
+      - light.wled_living_room
+  mode: single
+- id: '1770791672405'
+  alias: Keukenlamp 1 uit - achterdeur dicht na 2 minuten
+  description: ''
+  triggers:
+  - entity_id: binary_sensor.backdoor_door_sensor_contact
+    trigger: state
+    to: 'off'
+  conditions:
+  - condition: state
+    entity_id: light.kitchen_light_2
+    state: 'off'
+  actions:
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.kitchen_light_1
+  mode: single
+- id: '1770791760884'
+  alias: Keukenlamp 1 aan - achterdeur is 2+ minuten open
+  description: ''
+  triggers:
+  - entity_id: binary_sensor.backdoor_door_sensor_contact
+    trigger: state
+    to: 'on'
+    for:
+      seconds: 120
+  conditions:
+  - condition: state
+    entity_id: light.kitchen_light_2
+    state: 'off'
+  actions:
+  - data:
+      brightness_pct: 100
+      flash: long
+    action: light.turn_on
+    target:
+      entity_id: light.kitchen_light_1
+  mode: single
+- id: '1770813357193'
+  alias: Woonkamer electrische kachel aan - tijd en temperatuur
+  description: ''
+  triggers:
+  - trigger: time
+    at: '19:00:00'
+  conditions:
+  - condition: numeric_state
+    entity_id: climate.heating
+    attribute: temperature
+    above: 17.5
+  actions:
+  - type: turn_on
+    device_id: 9d3a29defe33b3fa57a3258022fca60d
+    entity_id: 93b47dd296ead86a34b6664c3c0f2a71
+    domain: switch
+  mode: single
+- id: '1770813824024'
+  alias: Woonkamer electrische kachel aan - knop
+  description: ''
+  triggers:
+  - domain: mqtt
+    device_id: ff9e223247ca4b341fbcd7adaa1be632
+    type: action
+    subtype: brightness_up_click
+    trigger: device
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: 9d3a29defe33b3fa57a3258022fca60d
+    entity_id: 93b47dd296ead86a34b6664c3c0f2a71
+    domain: switch
+  mode: single
+- id: '1770813877300'
+  alias: Woonkamer electrische kachel uit - knop
+  description: ''
+  triggers:
+  - domain: mqtt
+    device_id: ff9e223247ca4b341fbcd7adaa1be632
+    type: action
+    subtype: brightness_down_click
+    trigger: device
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: 9d3a29defe33b3fa57a3258022fca60d
+    entity_id: 93b47dd296ead86a34b6664c3c0f2a71
+    domain: switch
+  mode: single
+- id: '1770819376090'
+  alias: Woonkamer electrische kachel uit - tijd
+  description: ''
+  triggers:
+  - trigger: time
+    at: '22:00:00'
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: 9d3a29defe33b3fa57a3258022fca60d
+    entity_id: 93b47dd296ead86a34b6664c3c0f2a71
+    domain: switch
+  mode: single
+- id: '1770841758032'
+  alias: Keuken koelkast deur staat te lang open - tijd
+  description: ''
+  triggers:
+  - entity_id:
+    - binary_sensor.fridge_door_sensor_contact
+    trigger: state
+    to:
+    - 'on'
+    for:
+      hours: 0
+      minutes: 2
+      seconds: 10
+  conditions: []
+  actions:
+  - repeat:
+      while:
+      - condition: state
+        entity_id: binary_sensor.fridge_door_sensor_contact
+        state: 'on'
+      sequence:
+      - action: notify.telegram_notify
+        metadata: {}
+        data:
+          message: De koelkast staat nog open!
+          title: Koelkast
+      - delay:
+          seconds: 30
+  mode: restart
+- id: '1770841831432'
+  alias: Keuken lamp aan - beweging
+  description: Turn lights on when there is motion after sunset.
+  triggers:
+  - entity_id: binary_sensor.kitchen_motion_sensor_occupancy
+    trigger: state
+    to: 'on'
+  conditions:
+  - condition: numeric_state
+    below: 4
+    entity_id: sun.sun
+    attribute: elevation
+  actions:
+  - data:
+      brightness: 115
+      transition: 1
+    action: light.turn_on
+    target:
+      entity_id: light.zg2m_kitchen_lights
+  mode: single
+- id: '1770841858877'
+  alias: Keuken lampen uit - beweging
+  description: Turn lights off when 20 minutes no motion
+  triggers:
+  - entity_id: binary_sensor.kitchen_motion_sensor_occupancy
+    trigger: state
+    to: 'off'
+    for:
+      minutes: 20
+  conditions: []
+  actions:
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.zg2m_kitchen_lights
+  mode: single
+- id: '1770842095813'
+  alias: Kantoor lampen aan - beweging
+  description: Turn lights on when there is motion after sunset.
+  triggers:
+  - entity_id: binary_sensor.office_motion_sensor_occupancy
+    trigger: state
+    to: 'on'
+  conditions:
+  - condition: numeric_state
+    below: 4
+    entity_id: sun.sun
+    attribute: elevation
+  actions:
+  - action: scene.turn_on
+    metadata: {}
+    target:
+      entity_id: scene.kantoor_licht_scene_rood
+    data: {}
+  mode: single
+- id: '1770842157562'
+  alias: Kantoor lampen uit - beweging
+  description: Turn lights off when there is no motion for 15 minutes.
+  triggers:
+  - entity_id: binary_sensor.office_motion_sensor_occupancy
+    trigger: state
+    to: 'off'
+    for:
+      minutes: 15
+  conditions: []
+  actions:
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.zg2m_office_lights
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 3
+      milliseconds: 0
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.wled_office
+  mode: single
+- id: '1770842282219'
+  alias: Kantoor kast lampen toggle - knop
+  description: ''
+  triggers:
+  - domain: mqtt
+    device_id: 17f845d8c96ff4ff364f6aa73b64fed5
+    type: action
+    subtype: single_left
+    trigger: device
+  conditions: []
+  actions:
+  - action: light.toggle
+    metadata: {}
+    target:
+      entity_id:
+      - light.office_open_closet_light
+      - light.office_corner_color_light
+      - light.wled_office
+    data: {}
+  mode: single
+- id: '1770842401520'
+  alias: Kantoor bureau lamp toggle - knop
+  description: ''
+  triggers:
+  - domain: mqtt
+    device_id: 17f845d8c96ff4ff364f6aa73b64fed5
+    type: action
+    subtype: single_right
+    trigger: device
+  conditions: []
+  actions:
+  - action: light.toggle
+    metadata: {}
+    data: {}
+    target:
+      entity_id: light.office_desk_light
+  mode: single
+- id: '1770842480311'
+  alias: Kantoor alle lampen aan - knop
+  description: ''
+  triggers:
+  - domain: mqtt
+    device_id: 17f845d8c96ff4ff364f6aa73b64fed5
+    type: action
+    subtype: single_both
+    trigger: device
+  conditions: []
+  actions:
+  - action: light.toggle
+    metadata: {}
+    target:
+      entity_id:
+      - light.wled_office
+      - light.zg2m_office_lights
+    data: {}
+  mode: single
+- id: '1770842519407'
+  alias: Kantoor Nano wordt opgepakt - trilling
+  description: The Nano Tril sensor is triggert!
+  triggers:
+  - entity_id: binary_sensor.aqara_trilling_sensor_vibration
+    trigger: state
+    to: 'on'
+  conditions: []
+  actions:
+  - data:
+      message: Nano is opgepakt!
+    action: notify.telegram_notify
+  mode: single
+- id: '1770890352041'
+  alias: Achtertuin lampen aan - beweging
+  description: Turn lights on when there is motion and after sunset.
+  triggers:
+  - entity_id: binary_sensor.backyard_motion_sensor_occupancy
+    trigger: state
+    to: 'on'
+  conditions:
+  - condition: numeric_state
+    below: 2
+    entity_id: sun.sun
+    attribute: elevation
+  actions:
+  - data: {}
+    action: light.turn_on
+    target:
+      entity_id: light.backyard_spots
+  mode: single
+- id: '1770890373117'
+  alias: Achtertuin lampen uit - beweging
+  description: Turn lights off when there is no motion for 5 minutes.
+  triggers:
+  - entity_id: binary_sensor.backyard_motion_sensor_occupancy
+    trigger: state
+    to: 'off'
+    for:
+      minutes: 5
+  conditions: []
+  actions:
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.backyard_spots
+  mode: single
+- id: '1770890427344'
+  alias: Achtertuin camera activeer nachtmodus - zon
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunset
+  conditions: []
+  actions:
+  - data: {}
+    action: switch.turn_on
+    target:
+      entity_id: switch.backyard_camera_night_mode
+  mode: single
+- id: '1770890710827'
+  alias: Achtertuin deactiveer nachtmodus - zon
+  description: Turn the backyard camera nightmode off on sunrise.
+  triggers:
+  - trigger: sun
+    event: sunrise
+  conditions: []
+  actions:
+  - data: {}
+    action: switch.turn_off
+    target:
+      entity_id: switch.backyard_camera_night_mode
+  mode: single
+- id: '1770891608742'
+  alias: Oprit voordeur lampen uit om middernacht - tijd
+  description: ''
+  triggers:
+  - trigger: time
+    at: 00:01:00
+  conditions: []
+  actions:
+  - data:
+      transition: 1
+    action: light.turn_off
+    target:
+      entity_id: light.zg2m_frontdoor_lights
+  mode: single
+- id: '1770891666770'
+  alias: Oprit camera deactiveer nachtmodus - zon
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunrise
+  conditions: []
+  actions:
+  - data: {}
+    action: switch.turn_off
+    target:
+      entity_id: switch.driveway_camera_night_mode
+  mode: single
+- id: '1770891813186'
+  alias: Oprit camera activeer nachtmodus - zon
+  description: Turn the driveway camera nightmode on on sunset.
+  triggers:
+  - trigger: sun
+    event: sunset
+  conditions: []
+  actions:
+  - data: {}
+    action: switch.turn_on
+    target:
+      entity_id: switch.driveway_camera_night_mode
+  mode: single
+- id: '1770897794427'
+  alias: Oprit voordeur lampen aan - tijd
+  description: Turn lights on when there is motion in the hallway in the morning
+  triggers:
+  - trigger: time
+    at: 06:00:00
+  conditions:
+  - condition: sun.is_set
+    options: {}
+  actions:
+  - data:
+      brightness: 254
+      transition: 1
+    action: light.turn_on
+    target:
+      entity_id: light.zg2m_frontdoor_lights
+  mode: single
+- id: '1770897936087'
+  alias: Oprit voordeur lampen aan - zon
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id: sun.sun
+    attribute: elevation
+    below: -3.1
+  conditions: []
+  actions:
+  - data:
+      brightness: 153
+      transition: 1
+    action: light.turn_on
+    target:
+      entity_id: light.zg2m_frontdoor_lights
+  mode: single
+- id: '1770908139608'
+  alias: Oprit voordeur lampen uit  - zon
+  description: Turn lights on when there isnt a person detected anymore by the driveway
+    camera
+  triggers:
+  - trigger: sun.sunrise
+    options:
+      offset:
+        days: 0
+        hours: 0
+        minutes: 0
+        seconds: 0
+      offset_type: before
+  conditions: []
+  actions:
+  - data:
+      transition: 1
+    action: light.turn_off
+    target:
+      entity_id: light.zg2m_frontdoor_lights
+  mode: single
+- id: '1770908185773'
+  alias: Oprit voordeur lampen aan - persoondetectie
+  description: Turn lights on when there is a person detected by the driveway camera
+  triggers:
+  - entity_id: binary_sensor.driveway_person_occupancy
+    trigger: state
+    to: 'on'
+  conditions:
+  - condition: time
+    after: 05:00:00
+  - condition: sun
+    before: sunrise
+  actions:
+  - data:
+      entity_id: light.zg2m_frontdoor_lights
+      brightness: 254
+      transition: 1
+    action: light.turn_on
+  mode: single
+- id: '1770972089961'
+  alias: Gang lampen uit - beweging
+  description: Turn lights off when there is no motion.
+  triggers:
+  - entity_id: binary_sensor.hallway_motion_sensor_occupancy
+    trigger: state
+    to: 'off'
+  conditions: []
+  actions:
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.zg2m_hallway_lights
+  mode: single
+- id: '1770972119565'
+  alias: Gang lampen aan - beweging
+  description: Turn lights on when there is motion and after sunset.
+  triggers:
+  - entity_id: binary_sensor.hallway_motion_sensor_occupancy
+    trigger: state
+    to: 'on'
+  conditions:
+  - condition: numeric_state
+    below: 4
+    entity_id: sun.sun
+    attribute: elevation
+  actions:
+  - data:
+      brightness_pct: 30
+    action: light.turn_on
+    target:
+      entity_id: light.zg2m_hallway_lights
+  mode: single
+- id: '1770972189138'
+  alias: Schuur lamp aan - beweging
+  description: ''
+  triggers:
+  - entity_id: binary_sensor.shed_motion_sensor_occupancy
+    trigger: state
+    to: 'on'
+  conditions: []
+  actions:
+  - data: {}
+    action: light.turn_on
+    target:
+      entity_id: light.shed_light
+  mode: single
+- id: '1770972236940'
+  alias: Schuur lamp uit - beweging
+  description: ''
+  triggers:
+  - entity_id: binary_sensor.shed_motion_sensor_occupancy
+    trigger: state
+    to: 'off'
+    for:
+      minutes: 1
+  conditions: []
+  actions:
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.shed_light
+  mode: single
+- id: '1770972334718'
+  alias: Schuur lamp aan - knop
+  description: ''
+  triggers:
+  - domain: mqtt
+    device_id: 4954919e893c2e35bef2a318aa096c39
+    type: action
+    subtype: 'on'
+    trigger: device
+  conditions: []
+  actions:
+  - data: {}
+    action: light.turn_on
+    target:
+      entity_id: light.shed_light
+  mode: single
+- id: '1770972394071'
+  alias: Schuur lamp uit - knop
+  description: ''
+  triggers:
+  - domain: mqtt
+    device_id: 4954919e893c2e35bef2a318aa096c39
+    type: action
+    subtype: 'off'
+    trigger: device
+  conditions: []
+  actions:
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.shed_light
+  mode: single
+- id: '1770972578932'
+  alias: Systeem killswitch alle lampen uit
+  description: ''
+  triggers:
+  - trigger: time
+    at: 02:00:00
+  conditions: []
+  actions:
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.zg2m_living_room_lights
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.zg2m_kitchen_lights
+  - delay:
+      seconds: 2
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.zg2m_hallway_lights
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.wled_office
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.zg2m_office_lights
+  - delay:
+      seconds: 2
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.backyard_spots
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.shed_light
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.zg2m_backyard_standing_lights
+  - delay:
+      seconds: 2
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.wled_living_room
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.zg2m_frontdoor_lights
+  mode: single
+- id: '1770972726077'
+  alias: Systeem recorder purge database
+  description: ''
+  triggers:
+  - trigger: time_pattern
+    minutes: '15'
+    hours: /3
+  conditions: []
+  actions:
+  - action: recorder.purge
+  mode: single
+- id: '1770972765732'
+  alias: Systeem recorder repack database
+  description: ''
+  triggers:
+  - trigger: time
+    at: 04:30:00
+  conditions:
+  - condition: time
+    weekday:
+    - sun
+  actions:
+  - action: recorder.purge
+    data:
+      repack: true
+  mode: single
+- id: '1770975114150'
+  alias: Routine wasmachine is klaar - energiemeting
+  description: ''
+  triggers:
+  - entity_id: sensor.washing_machine_smart_plug_power
+    trigger: state
+    to: '0'
+    for:
+      minutes: 5
+  conditions: []
+  actions:
+  - data:
+      message: De wasmachine is klaar.
+    action: notify.telegram_notify
+  mode: single
+- id: '1770975617543'
+  alias: Routine afval moet morgen naar buiten - tijd
+  description: ''
+  triggers:
+  - trigger: time
+    at: '11:00:00'
+    weekday:
+    - sun
+    - fri
+    - thu
+    - wed
+    - tue
+    - mon
+  - trigger: time
+    at: '20:30:00'
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+    - sun
+  conditions:
+  - condition: not
+    conditions:
+    - condition: state
+      entity_id: sensor.afvalinfo_home_trash_type_tomorrow
+      state:
+      - geen
+  actions:
+  - data:
+      message: Morgen moet het volgende afval naar buiten, {{ states('sensor.afvalinfo_home_trash_type_tomorrow')
+        }}
+      title: Afval
+    action: notify.telegram_notify
+  mode: single
+- id: '1771062382074'
+  alias: Routine vakantie lampen aan - zon
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunset
+    offset: 0
+  conditions: []
+  actions:
+  - action: light.turn_on
+    metadata: {}
+    target:
+      entity_id: light.zg2m_vacation_lights
+    data: {}
+  mode: single
+- id: '1771062498198'
+  alias: Routine vakantie lampen uit - tijd
+  description: Turn lights off when when we are on holiday.
+  triggers:
+  - trigger: time
+    at: '22:10:00'
+  conditions: []
+  actions:
+  - data: {}
+    action: light.turn_off
+    target:
+      entity_id: light.zg2m_vacation_lights
+  mode: single
+- id: '1771062833591'
+  alias: Routine picnic komt eraan - tijd
+  description: Send a notification when the short window of the picnic delivery is
+    near
+  triggers:
+  - trigger: template
+    value_template: "{% if states('sensor.picnic_next_delivery_eta_start') not in
+      ['unknown','unavailable','none'] %}\n  {{ 601 > (as_timestamp(states('sensor.picnic_next_delivery_eta_start'),
+      0) - as_timestamp(now(), 0)) > 540}}\n{% endif %}"
+  conditions: []
+  actions:
+  - data:
+      message: "Picnic bezorgt tussen {{((states('sensor.picnic_next_delivery_eta_start')|as_timestamp
+        -\n  utcnow()|as_timestamp)/60)|round}} minuten en {{((states('sensor.picnic_next_delivery_eta_end')|as_timestamp
+        -\n  utcnow()|as_timestamp)/60)|round}} minuten!\n"
+      title: Picnic komt eraan
+    action: notify.telegram_notify
+  mode: single
+- id: '1771062941348'
+  alias: Routine waterdetector wasmachine batterij bijna leeg - batterij
+  description: The battery of the washing machine water detection is almost empty
+  triggers:
+  - entity_id: binary_sensor.washing_machine_water_sensor_battery_low
+    trigger: state
+    to: 'on'
+  conditions: []
+  actions:
+  - data:
+      title: Waterdetector wasmachine batterij
+      message: Batterij van water detectie wasmachine is bijna leeg
+    action: notify.telegram_notify
+  mode: single
+- id: '1771063045438'
+  alias: Routine waterdetector wasmachine water gedetecteerd - water
+  description: The water alarm behind the washing machine is triggered
+  triggers:
+  - entity_id: binary_sensor.washing_machine_water_sensor_water_leak
+    trigger: state
+    to: 'on'
+  conditions: []
+  actions:
+  - data:
+      message: Er is water gedetecteerd achter de wasmachine!
+      title: Water gedetecterd!!
+    action: notify.telegram_notify
+  mode: single
+- id: '1771234513697'
+  alias: Overloop CO alarm batterij bijna leeg - batterij
+  description: ''
+  triggers:
+  - entity_id: binary_sensor.passage_co_sensor_battery_low
+    trigger: state
+    to: 'on'
+  conditions: []
+  actions:
+  - data:
+      message: Batterij van koolmonoxide alarm overloop is bijna leeg
+      title: Batterij koolstofmonoxide
+    action: notify.telegram_notify
+  mode: single
+- id: '1771234628273'
+  alias: Overloop CO alarm gaat af - CO
+  description: The CO alarm in the passage is triggered
+  triggers:
+  - entity_id: binary_sensor.passage_co_sensor_carbon_monoxide
+    trigger: state
+    to: 'on'
+  conditions: []
+  actions:
+  - data:
+      message: Koolmonoxide op de overloop gaat af!
+      title: PAS OP! Koolstofmonoxide
+    action: notify.telegram_notify
+  mode: single
+- id: '1771234681483'
+  alias: Gang brandalarm gaat af - vuur
+  description: The smoke alarm in the hallway is triggered
+  triggers:
+  - entity_id: binary_sensor.hallway_smoke_sensor_smoke
+    trigger: state
+    to: 'on'
+  conditions: []
+  actions:
+  - data:
+      message: Brandalarm op de gang gaat af!
+      title: PAS OP! Brandalarm
+    action: notify.telegram_notify
+  mode: single
+- id: '1771234752629'
+  alias: Overloop brandalarm gaat af - vuur
+  description: The smoke alarm in the passage is triggered
+  triggers:
+  - entity_id: binary_sensor.passage_smoke_sensor_smoke
+    trigger: state
+    to: 'on'
+  conditions: []
+  actions:
+  - data:
+      message: Brandalarm op de overloop gaat af!
+      title: PAS OP! Brandalarm gaat af
+    action: notify.telegram_notify
+  mode: single
+- id: '1771234813565'
+  alias: Gang brandalarm batterij bijna leeg - batterij
+  description: The battery of the smoke alarm hallway is almost empty
+  triggers:
+  - entity_id: binary_sensor.hallway_smoke_sensor_battery_low
+    trigger: state
+    to: 'on'
+  conditions: []
+  actions:
+  - data:
+      message: '"Batterij van brandalarm gang is bijna leeg"'
+    action: notify.telegram_notify
+  mode: single
+- id: '1771234841042'
+  alias: Overloop brandalarm batterij bijna leeg - batterij
+  description: The battery of the smoke alarm passage is almost empty
+  triggers:
+  - entity_id: binary_sensor.passage_smoke_sensor_battery_low
+    trigger: state
+    to: 'on'
+  conditions: []
+  actions:
+  - data:
+      message: Batterij van brandalarm overloop is bijna leeg
+    action: notify.telegram_notify
+  mode: single
+- id: '1771935598996'
+  alias: Voortuin kerstverlichting aan in de ochtend - tijd
+  description: ''
+  triggers:
+  - trigger: time
+    at: 06:00:00
+  conditions: []
+  actions:
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.sonoff_christmas_backyard
+  mode: single
+- id: '1786639493762'
+  alias: Palworld server gestart - numeric state
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.palworld_players
+    above: 0
+  conditions: []
+  actions:
+  - action: notify.telegram_notify
+    metadata: {}
+    data:
+      message: Iemand is lekker Palworld aan het spelen
+      title: Palworld server gestart!
+  mode: restart
+- id: '1786695120900'
+  alias: Palworld server gestopt - numeric state
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.palworld_players
+    below: 1
+  conditions: []
+  actions:
+  - action: notify.telegram_notify
+    metadata: {}
+    data:
+      message: Lekker gewerkt mannen
+      title: Palworld server gestopt!
+  mode: restart
+- id: '1791912560637'
+  alias: Achtertuin staande lampen aan - zon
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id: sun.sun
+    attribute: elevation
+    below: -3.1
+  conditions: []
+  actions:
+  - action: light.turn_on
+    target:
+      entity_id: light.zg2m_backyard_standing_lights
+    data:
+      transition: 1
+      color_temp_kelvin: 2000
+      brightness_pct: 30
+  mode: single
+- id: '1791912621309'
+  alias: Achtertuin staande lampen uit - tijd
+  description: ''
+  triggers:
+  - trigger: time
+    at: '23:00:00'
+  conditions: []
+  actions:
+  - action: light.turn_off
+    target:
+      entity_id:
+      - light.zg2m_backyard_standing_lights
+    data: {}
+  mode: single
+- id: '1791957356151'
+  alias: Achtertuin staande lampen aan ochtend - tijd
+  description: ''
+  triggers:
+  - trigger: time
+    at: 06:00:00
+  conditions: []
+  actions:
+  - action: light.turn_on
+    target:
+      entity_id:
+      - light.zg2m_backyard_standing_lights
+    data:
+      color_temp_kelvin: 2000
+      brightness_pct: 30
+  mode: single
+- id: '1791957454623'
+  alias: Achtertuin staande lampen uit ochtend - zon
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sun.sun
+    attribute: elevation
+    above: 0
+  conditions: []
+  actions:
+  - action: light.turn_off
+    target:
+      entity_id:
+      - light.zg2m_backyard_standing_lights
+    data: {}
+  mode: single

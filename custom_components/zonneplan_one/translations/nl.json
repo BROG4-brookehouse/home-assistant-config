@@ -2,32 +2,43 @@
   "config": {
     "step": {
       "auth": {
-        "title": "Login link opvragen",
-        "description": "Vul je e-mailadres in om Zonneplan om een login link te kunnen vragen",
+        "title": "Login code opvragen",
+        "description": "Vul je e-mailadres in om Zonneplan om een inlogcode te te kunnen vragen",
         "data": {
           "email": "E-mailadres"
         }
       },
-      "fetch_password": {
-        "title": "Controleer login",
-        "description": "Controleer je mailbox op een mail van Zonneplan en klik op de link in die mail *(kan enkele minuten duren voordat de mail binnenkomt)*. Ga hier vervolgens verder door op **VOLGENDE** te klikken."
+      "otp": {
+        "title": "Vul login code in",
+        "description": "Vul de 6 cijferige inlogcode uit de email in",
+        "data": {
+          "otp": "Inlogcode"
+        }
+      },
+      "timeout": {
+        "title": "Login link verlopen",
+        "description": "Je hebt niet snel genoeg op de login link geklikt. Dien een nieuw verzoek in om een nieuwe link te ontvangen."
+      },
+      "poll_failed": {
+        "title": "Er is iets mis gegaan",
+        "description": "We konden de login link niet verifiëren. Dien een nieuw verzoek in om opnieuw te proberen."
       },
       "reauth_confirm": {
         "title": "Verifieer opnieuw je Zonneplan login",
         "description": "Herauthenticatie van je account is nodig. Ga verder om Zonneplan om een nieuwe login mail op te vragen."
       }
     },
+    "progress": {
+      "wait_for_approval": "Controleer je mailbox op een mail van Zonneplan en klik op de link.\n\n**Kan enkele minuten duren voordat de mail binnenkomt.**\n\nGa hier vervolgens verder."
+    },
     "abort": {
       "failed_to_authenticate": "Inloggen is mislukt",
       "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
       "reauth_successful": "Herauthenticatie was succesvol"
     },
-    "create_entry": {
-      "default": "Inloggen gelukt"
-    },
     "error": {
-      "failed_to_request_login": "Het opvragen van een login link ging mis *(controleer de logs)*",
-      "no_password": "Nog een wachtwoord ontvangen *(heb je op de link uit de mail van Zonneplan geklikt?)*"
+      "failed_to_request_login": "Het opvragen van een inlogcode ging mis, probeer het later nog een keer. *(Blijft het mis gaan, controleer dan de logs)*",
+      "invalid_otp": "De inlogcode is onjuist of verlopen. Er is een nieuwe verstuurd."
     }
   },
   "entity": {
@@ -51,6 +62,24 @@
       },
       "current_electricity_tariff": {
         "name": "Huidig elektriciteitstarief"
+      },
+      "current_quarter_hourly_electricity_tariff": {
+        "name": "Huidig kwartier elektriciteitstarief"
+      },
+      "current_hourly_electricity_tariff": {
+        "name": "Huidig uur elektriciteitstarief"
+      },
+      "cheapest_hour_today": {
+        "name": "Goedkoopste uur vandaag"
+      },
+      "most_expensive_hour_today": {
+        "name": "Duurste uur vandaag"
+      },
+      "cheapest_quarter_hour_today": {
+        "name": "Goedkoopste kwartier vandaag"
+      },
+      "most_expensive_quarter_hour_today": {
+        "name": "Duurste kwartier vandaag"
       },
       "current_gas_tariff": {
         "name": "Huidig gastarief"
@@ -170,6 +199,24 @@
       "powerplay_today": {
         "name": "Powerplay vandaag"
       },
+      "installation_wp": {
+        "name": "Installatie Wp"
+      },
+      "panel_wp": {
+        "name": "Paneel Wp"
+      },
+      "panel_count": {
+        "name": "Panelen aantal"
+      },
+      "inverter_model_name": {
+        "name": "Omvormer model"
+      },
+      "inverter_firmware_version": {
+        "name": "Omvormer firmware versie"
+      },
+      "module_firmware_version": {
+        "name": "Module firmware versie"
+      },
       "yield_today": {
         "name": "Opbrengst vandaag"
       },
@@ -182,26 +229,83 @@
       "electricity_delivery_costs_today": {
         "name": "Afname vandaag"
       },
+      "electricity_delivery_costs_today_excl_tax": {
+        "name": "Afname vandaag (excl. btw)"
+      },
       "electricity_delivery_costs_this_month": {
         "name": "Afname deze maand"
+      },
+      "electricity_delivery_costs_this_month_excl_tax": {
+        "name": "Afname deze maand (excl. btw)"
       },
       "electricity_delivery_costs_this_year": {
         "name": "Afname dit jaar"
       },
+      "electricity_delivery_costs_this_year_excl_tax": {
+        "name": "Afname dit jaar (excl. btw)"
+      },
       "electricity_production_costs_today": {
         "name": "Teruglevering vandaag"
+      },
+      "electricity_production_costs_today_excl_tax": {
+        "name": "Teruglevering vandaag (excl. btw)"
       },
       "electricity_production_costs_this_month": {
         "name": "Teruglevering deze maand"
       },
+      "electricity_production_costs_this_month_excl_tax": {
+        "name": "Teruglevering deze maand (excl. btw)"
+      },
       "electricity_production_costs_this_year": {
         "name": "Teruglevering dit jaar"
+      },
+      "electricity_production_costs_this_year_excl_tax": {
+        "name": "Teruglevering dit jaar (excl. btw)"
+      },
+      "electricity_delivery_price_per_unit_today": {
+        "name": "Afname gemiddelde prijs per KWh vandaag"
+      },
+      "electricity_delivery_price_per_unit_today_excl_tax": {
+        "name": "Afname gemiddelde prijs per KWh vandaag (excl. btw)"
+      },
+      "electricity_delivery_price_per_unit_this_month": {
+        "name": "Afname gemiddelde prijs per KWh deze maand"
+      },
+      "electricity_delivery_price_per_unit_this_month_excl_tax": {
+        "name": "Afname gemiddelde prijs per KWh deze maand (excl. btw)"
+      },
+      "electricity_delivery_price_per_unit_this_year": {
+        "name": "Afname gemiddelde prijs per KWh dit jaar"
+      },
+      "electricity_delivery_price_per_unit_this_year_excl_tax": {
+        "name": "Afname gemiddelde prijs per KWh dit jaar (excl. btw)"
+      },
+      "electricity_production_price_per_unit_today": {
+        "name": "Teruglevering gemiddelde prijs per KWh vandaag"
+      },
+      "electricity_production_price_per_unit_today_excl_tax": {
+        "name": "Teruglevering gemiddelde prijs per KWh vandaag (excl. btw)"
+      },
+      "electricity_production_price_per_unit_this_month": {
+        "name": "Teruglevering gemiddelde prijs per KWh deze maand"
+      },
+      "electricity_production_price_per_unit_this_month_excl_tax": {
+        "name": "Teruglevering gemiddelde prijs per KWh deze maand (excl. btw)"
+      },
+      "electricity_production_price_per_unit_this_year": {
+        "name": "Teruglevering gemiddelde prijs per KWh dit jaar"
+      },
+      "electricity_production_price_per_unit_this_year_excl_tax": {
+        "name": "Teruglevering gemiddelde prijs per KWh dit jaar (excl. btw)"
       },
       "gas_consumption_today": {
         "name": "Gasverbruik vandaag"
       },
       "gas_delivery_costs_today": {
         "name": "Gas afname vandaag"
+      },
+      "gas_delivery_costs_today_excl_tax": {
+        "name": "Gas afname vandaag (excl. btw)"
       },
       "electricity_consumption": {
         "name": "Elektriciteitsverbruik"
@@ -237,6 +341,9 @@
           "Charging": "Opladen",
           "Discharging": "Ontladen"
         }
+      },
+      "host_device_model_name": {
+        "name": "Model naam"
       },
       "battery_control_mode": {
         "name": "Batterijbesturingsmodus",
@@ -288,6 +395,9 @@
       "battery_cycles": {
         "name": "Batterijcycli"
       },
+      "backup_power_usable_capacity_wh": {
+        "name": "Beschikbare noodreserve"
+      },
       "charge_point_state": {
         "name": "Laadpaalstatus",
         "state": {
@@ -298,6 +408,9 @@
       },
       "charge_point_power": {
         "name": "Laadpaalvermogen"
+      },
+      "charge_point_model_name": {
+        "name": "Laadpaal model"
       },
       "charge_point_energy_delivered_session": {
         "name": "Laadpaal energie geleverd sessie"
@@ -329,6 +442,9 @@
       "charge_point_dynamic_load_desired_distance": {
         "name": "Laadpaal dynamic load gewenste afstand"
       },
+      "charge_point_dynamic_desired_additional_battery_percentage": {
+        "name": "Laadpaal dynamic load gewenst percentage"
+      },
       "charge_point_dynamic_load_desired_end_time": {
         "name": "Laadpaal dynamic load gewenste eindtijd"
       },
@@ -341,14 +457,26 @@
       "delivery_costs_this_month": {
         "name": "Netto afname deze maand"
       },
+      "delivery_costs_this_month_excl_tax": {
+        "name": "Netto afname deze maand (excl. btw)"
+      },
       "delivery_costs_this_year": {
         "name": "Netto afname dit jaar"
+      },
+      "delivery_costs_this_year_excl_tax": {
+        "name": "Netto afname dit jaar (excl. btw)"
       },
       "production_costs_this_month": {
         "name": "Netto teruggeleverd deze maand"
       },
+      "production_costs_this_monthexcl_tax": {
+        "name": "Netto teruggeleverd deze maand (excl. btw)"
+      },
       "production_costs_this_year": {
         "name": "Netto teruggeleverd dit jaar"
+      },
+      "production_costs_this_year_excl_tax": {
+        "name": "Netto teruggeleverd dit jaar (excl. btw)"
       },
       "energy_delivered_sum_today": {
         "name": "Netto afname vandaag"
@@ -373,6 +501,9 @@
       "dynamic_charging_enabled": {
         "name": "Powerplay"
       },
+      "charge_on_solar_enabled": {
+        "name": "Zonladen"
+      },
       "dynamic_load_balancing_enabled": {
         "name": "Dynamische load balancing ingeschakeld"
       },
@@ -393,6 +524,9 @@
       },
       "grid_congestion_active": {
         "name": "Netcongestie"
+      },
+      "backup_power_active": {
+        "name": "Noodstroom actief"
       },
       "powerplay_enabled": {
         "name": "Powerplay"
@@ -437,6 +571,12 @@
       },
       "stop_charge": {
         "name": "Stop laden"
+      },
+      "continue_auto_charging": {
+        "name": "Automatisch laden voortzetten"
+      },
+      "reset_dynamic_charge": {
+        "name": "Laadplan verwijderen"
       }
     },
     "number": {
@@ -445,6 +585,20 @@
       },
       "max_charge_power": {
         "name": "Zonnestroom opslaan (Huisoptimalisatie)"
+      },
+      "reserve_discharge_cutoff_wh": {
+        "name": "Minimum noodstroom reserve"
+      },
+      "charge_point_dynamic_load_desired_distance": {
+        "name": "Gewenste afstand"
+      },
+      "charge_point_dynamic_desired_additional_battery_percentage": {
+        "name": "Gewenst pecentage"
+      }
+    },
+    "datetime": {
+      "charge_point_dynamic_load_desired_end_time": {
+        "name": "Gewenste eindtijd"
       }
     },
     "select": {
@@ -455,6 +609,9 @@
           "home_optimization": "Huisoptimalisatie",
           "self_consumption": "Zelfconsumptie"
         }
+      },
+      "charge_point_vehicle": {
+        "name": "Auto"
       }
     }
   }
