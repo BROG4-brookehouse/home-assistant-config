@@ -31,9 +31,6 @@
       supported_features: 44
       icon: mdi:floor-lamp-torchiere-variant-outline
       state: 'on'
-    switch.living_room_television_light:
-      friendly_name: Living room television light
-      state: 'off'
     switch.living_room_couch_light:
       friendly_name: Living room couch light
       state: 'off'
@@ -258,9 +255,9 @@
       - Akemi
       supported_color_modes:
       - rgb
-      effect: Candle Multi
+      effect: Solid
       color_mode: rgb
-      brightness: 13
+      brightness: 3
       hs_color:
       - 312.174
       - 81.176
@@ -275,6 +272,29 @@
       supported_features: 36
       icon: mdi:led-strip-variant
       state: 'on'
+    light.living_room_television_light:
+      min_color_temp_kelvin: 1798
+      max_color_temp_kelvin: 6535
+      effect_list:
+      - blink
+      - breathe
+      - okay
+      - channel_change
+      - finish_effect
+      - stop_effect
+      supported_color_modes:
+      - color_temp
+      effect:
+      color_mode:
+      brightness:
+      color_temp_kelvin:
+      hs_color:
+      rgb_color:
+      xy_color:
+      friendly_name: Television light
+      supported_features: 44
+      icon: mdi:post-lamp
+      state: 'off'
   metadata: {}
   icon: mdi:movie
 - id: '1773260367772'
@@ -294,7 +314,7 @@
       - color_temp
       effect:
       color_mode: color_temp
-      brightness: 153
+      brightness: 178
       color_temp_kelvin: 1862
       hs_color:
       - 30.531
@@ -309,9 +329,6 @@
       friendly_name: Closet light
       supported_features: 44
       icon: mdi:floor-lamp-torchiere-variant-outline
-      state: 'on'
-    switch.living_room_television_light:
-      friendly_name: Living room television light
       state: 'on'
     switch.living_room_couch_light:
       friendly_name: Living room couch light
@@ -330,7 +347,7 @@
       - color_temp
       effect:
       color_mode: color_temp
-      brightness: 204
+      brightness: 178
       color_temp_kelvin: 2202
       hs_color:
       - 29.79
@@ -547,5 +564,553 @@
       supported_features: 36
       icon: mdi:led-strip-variant
       state: 'off'
+    light.living_room_television_light:
+      min_color_temp_kelvin: 1798
+      max_color_temp_kelvin: 6535
+      effect_list:
+      - blink
+      - breathe
+      - okay
+      - channel_change
+      - finish_effect
+      - stop_effect
+      supported_color_modes:
+      - color_temp
+      effect:
+      color_mode: color_temp
+      brightness: 76
+      color_temp_kelvin: 1798
+      hs_color:
+      - 29.712
+      - 100
+      rgb_color:
+      - 255
+      - 126
+      - 0
+      xy_color:
+      - 0.614
+      - 0.373
+      friendly_name: Television light
+      supported_features: 44
+      icon: mdi:post-lamp
+      state: 'on'
   metadata: {}
   icon: mdi:ceiling-light-multiple-outline
+- id: '1773512793531'
+  name: Kantoor licht scene rood
+  entities:
+    light.office_desk_light:
+      supported_color_modes:
+      - onoff
+      color_mode: onoff
+      friendly_name: Office desk light
+      supported_features: 0
+      state: 'on'
+    light.office_corner_color_light:
+      min_color_temp_kelvin: 1801
+      max_color_temp_kelvin: 6535
+      effect_list:
+      - blink
+      - breathe
+      - okay
+      - channel_change
+      - finish_effect
+      - stop_effect
+      - colorloop
+      - stop_colorloop
+      supported_color_modes:
+      - color_temp
+      - xy
+      effect:
+      color_mode: xy
+      brightness: 217
+      color_temp_kelvin:
+      hs_color:
+      - 355.059
+      - 100
+      rgb_color:
+      - 255
+      - 0
+      - 21
+      xy_color:
+      - 0.7347
+      - 0.2653
+      friendly_name: Colorlight office
+      supported_features: 44
+      icon: mdi:floor-lamp-dual-outline
+      state: 'on'
+    light.wled_office:
+      effect_list:
+      - Solid
+      - Blink
+      - Breathe
+      - Wipe
+      - Wipe Random
+      - Random Colors
+      - Sweep
+      - Dynamic
+      - Colorloop
+      - Rainbow
+      - Scan
+      - Scan Dual
+      - Fade
+      - Theater
+      - Theater Rainbow
+      - Running
+      - Saw
+      - Twinkle
+      - Dissolve
+      - Dissolve Rnd
+      - Sparkle
+      - Sparkle Dark
+      - Sparkle+
+      - Strobe
+      - Strobe Rainbow
+      - Strobe Mega
+      - Blink Rainbow
+      - Android
+      - Chase
+      - Chase Random
+      - Chase Rainbow
+      - Chase Flash
+      - Chase Flash Rnd
+      - Rainbow Runner
+      - Colorful
+      - Traffic Light
+      - Sweep Random
+      - Chase 2
+      - Aurora
+      - Stream
+      - Scanner
+      - Lighthouse
+      - Fireworks
+      - Rain
+      - Tetrix
+      - Fire Flicker
+      - Gradient
+      - Loading
+      - Rolling Balls
+      - Fairy
+      - Two Dots
+      - Fairytwinkle
+      - Running Dual
+      - RSVD
+      - Chase 3
+      - Tri Wipe
+      - Tri Fade
+      - Lightning
+      - ICU
+      - Multi Comet
+      - Scanner Dual
+      - Stream 2
+      - Oscillate
+      - Pride 2015
+      - Juggle
+      - Palette
+      - Fire 2012
+      - Colorwaves
+      - Bpm
+      - Fill Noise
+      - Noise 1
+      - Noise 2
+      - Noise 3
+      - Noise 4
+      - Colortwinkles
+      - Lake
+      - Meteor
+      - Meteor Smooth
+      - Railway
+      - Ripple
+      - Twinklefox
+      - Twinklecat
+      - Halloween Eyes
+      - Solid Pattern
+      - Solid Pattern Tri
+      - Spots
+      - Spots Fade
+      - Glitter
+      - Candle
+      - Fireworks Starburst
+      - Fireworks 1D
+      - Bouncing Balls
+      - Sinelon
+      - Sinelon Dual
+      - Sinelon Rainbow
+      - Popcorn
+      - Drip
+      - Plasma
+      - Percent
+      - Ripple Rainbow
+      - Heartbeat
+      - Pacifica
+      - Candle Multi
+      - Solid Glitter
+      - Sunrise
+      - Phased
+      - Twinkleup
+      - Noise Pal
+      - Sine
+      - Phased Noise
+      - Flow
+      - Chunchun
+      - Dancing Shadows
+      - Washing Machine
+      - Rotozoomer
+      - Blends
+      - TV Simulator
+      - Dynamic Smooth
+      - Spaceships
+      - Crazy Bees
+      - Ghost Rider
+      - Blobs
+      - Scrolling Text
+      - Drift Rose
+      - Distortion Waves
+      - Soap
+      - Octopus
+      - Waving Cell
+      - Pixels
+      - Pixelwave
+      - Juggles
+      - Matripix
+      - Gravimeter
+      - Plasmoid
+      - Puddles
+      - Midnoise
+      - Noisemeter
+      - Freqwave
+      - Freqmatrix
+      - GEQ
+      - Waterfall
+      - Freqpixels
+      - RSVD
+      - Noisefire
+      - Puddlepeak
+      - Noisemove
+      - Noise2D
+      - Perlin Move
+      - Ripple Peak
+      - Firenoise
+      - Squared Swirl
+      - RSVD
+      - DNA
+      - Matrix
+      - Metaballs
+      - Freqmap
+      - Gravcenter
+      - Gravcentric
+      - Gravfreq
+      - DJ Light
+      - Funky Plank
+      - RSVD
+      - Pulser
+      - Blurz
+      - Drift
+      - Waverly
+      - Sun Radiation
+      - Colored Bursts
+      - Julia
+      - RSVD
+      - RSVD
+      - RSVD
+      - Game Of Life
+      - Tartan
+      - Polar Lights
+      - Swirl
+      - Lissajous
+      - Frizzles
+      - Plasma Ball
+      - Flow Stripe
+      - Hiphotic
+      - Sindots
+      - DNA Spiral
+      - Black Hole
+      - Wavesins
+      - Rocktaves
+      - Akemi
+      supported_color_modes:
+      - rgb
+      effect: Theater
+      color_mode: rgb
+      brightness: 178
+      hs_color:
+      - 9.123
+      - 67.059
+      rgb_color:
+      - 255
+      - 110
+      - 84
+      xy_color:
+      - 0.589
+      - 0.329
+      friendly_name: LED strip closet office
+      supported_features: 36
+      icon: mdi:led-strip-variant
+      state: 'on'
+    light.office_open_closet_light:
+      supported_color_modes:
+      - onoff
+      color_mode: onoff
+      friendly_name: Office open closet light
+      supported_features: 0
+      state: 'on'
+  metadata: {}
+- id: '1773512819242'
+  name: Kantoor licht scene groen
+  entities:
+    light.office_desk_light:
+      supported_color_modes:
+      - onoff
+      color_mode: onoff
+      friendly_name: Office desk light
+      supported_features: 0
+      state: 'on'
+    light.office_corner_color_light:
+      min_color_temp_kelvin: 1801
+      max_color_temp_kelvin: 6535
+      effect_list:
+      - blink
+      - breathe
+      - okay
+      - channel_change
+      - finish_effect
+      - stop_effect
+      - colorloop
+      - stop_colorloop
+      supported_color_modes:
+      - color_temp
+      - xy
+      effect:
+      color_mode: xy
+      brightness: 128
+      color_temp_kelvin:
+      hs_color:
+      - 119.077
+      - 76.471
+      rgb_color:
+      - 63
+      - 255
+      - 60
+      xy_color:
+      - 0.195
+      - 0.689
+      friendly_name: Colorlight office
+      supported_features: 44
+      icon: mdi:floor-lamp-dual-outline
+      state: 'on'
+    light.wled_office:
+      effect_list:
+      - Solid
+      - Blink
+      - Breathe
+      - Wipe
+      - Wipe Random
+      - Random Colors
+      - Sweep
+      - Dynamic
+      - Colorloop
+      - Rainbow
+      - Scan
+      - Scan Dual
+      - Fade
+      - Theater
+      - Theater Rainbow
+      - Running
+      - Saw
+      - Twinkle
+      - Dissolve
+      - Dissolve Rnd
+      - Sparkle
+      - Sparkle Dark
+      - Sparkle+
+      - Strobe
+      - Strobe Rainbow
+      - Strobe Mega
+      - Blink Rainbow
+      - Android
+      - Chase
+      - Chase Random
+      - Chase Rainbow
+      - Chase Flash
+      - Chase Flash Rnd
+      - Rainbow Runner
+      - Colorful
+      - Traffic Light
+      - Sweep Random
+      - Chase 2
+      - Aurora
+      - Stream
+      - Scanner
+      - Lighthouse
+      - Fireworks
+      - Rain
+      - Tetrix
+      - Fire Flicker
+      - Gradient
+      - Loading
+      - Rolling Balls
+      - Fairy
+      - Two Dots
+      - Fairytwinkle
+      - Running Dual
+      - RSVD
+      - Chase 3
+      - Tri Wipe
+      - Tri Fade
+      - Lightning
+      - ICU
+      - Multi Comet
+      - Scanner Dual
+      - Stream 2
+      - Oscillate
+      - Pride 2015
+      - Juggle
+      - Palette
+      - Fire 2012
+      - Colorwaves
+      - Bpm
+      - Fill Noise
+      - Noise 1
+      - Noise 2
+      - Noise 3
+      - Noise 4
+      - Colortwinkles
+      - Lake
+      - Meteor
+      - Meteor Smooth
+      - Railway
+      - Ripple
+      - Twinklefox
+      - Twinklecat
+      - Halloween Eyes
+      - Solid Pattern
+      - Solid Pattern Tri
+      - Spots
+      - Spots Fade
+      - Glitter
+      - Candle
+      - Fireworks Starburst
+      - Fireworks 1D
+      - Bouncing Balls
+      - Sinelon
+      - Sinelon Dual
+      - Sinelon Rainbow
+      - Popcorn
+      - Drip
+      - Plasma
+      - Percent
+      - Ripple Rainbow
+      - Heartbeat
+      - Pacifica
+      - Candle Multi
+      - Solid Glitter
+      - Sunrise
+      - Phased
+      - Twinkleup
+      - Noise Pal
+      - Sine
+      - Phased Noise
+      - Flow
+      - Chunchun
+      - Dancing Shadows
+      - Washing Machine
+      - Rotozoomer
+      - Blends
+      - TV Simulator
+      - Dynamic Smooth
+      - Spaceships
+      - Crazy Bees
+      - Ghost Rider
+      - Blobs
+      - Scrolling Text
+      - Drift Rose
+      - Distortion Waves
+      - Soap
+      - Octopus
+      - Waving Cell
+      - Pixels
+      - Pixelwave
+      - Juggles
+      - Matripix
+      - Gravimeter
+      - Plasmoid
+      - Puddles
+      - Midnoise
+      - Noisemeter
+      - Freqwave
+      - Freqmatrix
+      - GEQ
+      - Waterfall
+      - Freqpixels
+      - RSVD
+      - Noisefire
+      - Puddlepeak
+      - Noisemove
+      - Noise2D
+      - Perlin Move
+      - Ripple Peak
+      - Firenoise
+      - Squared Swirl
+      - RSVD
+      - DNA
+      - Matrix
+      - Metaballs
+      - Freqmap
+      - Gravcenter
+      - Gravcentric
+      - Gravfreq
+      - DJ Light
+      - Funky Plank
+      - RSVD
+      - Pulser
+      - Blurz
+      - Drift
+      - Waverly
+      - Sun Radiation
+      - Colored Bursts
+      - Julia
+      - RSVD
+      - RSVD
+      - RSVD
+      - Game Of Life
+      - Tartan
+      - Polar Lights
+      - Swirl
+      - Lissajous
+      - Frizzles
+      - Plasma Ball
+      - Flow Stripe
+      - Hiphotic
+      - Sindots
+      - DNA Spiral
+      - Black Hole
+      - Wavesins
+      - Rocktaves
+      - Akemi
+      supported_color_modes:
+      - rgb
+      effect: Theater
+      color_mode: rgb
+      brightness: 178
+      hs_color:
+      - 122.132
+      - 77.255
+      rgb_color:
+      - 58
+      - 255
+      - 65
+      xy_color:
+      - 0.191
+      - 0.684
+      friendly_name: LED strip closet office
+      supported_features: 36
+      icon: mdi:led-strip-variant
+      state: 'on'
+    light.office_open_closet_light:
+      supported_color_modes:
+      - onoff
+      color_mode: onoff
+      friendly_name: Office open closet light
+      supported_features: 0
+      state: 'on'
+  metadata: {}

@@ -8,25 +8,29 @@
           "email": "Email address"
         }
       },
-      "fetch_password": {
-        "title": "Validate login",
-        "description": "Check your mailbox and click on the link from Zonneplan. After that proceed here by clicking **NEXT**."
+      "timeout": {
+        "title": "Login link expired",
+        "description": "You didn't click the login link in time. Submit to request a new one."
+      },
+      "poll_failed": {
+        "title": "Something went wrong",
+        "description": "We couldn't verify the login link. Submit to try again."
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Zonneplan integration needs to re-authenticate your account"
       }
     },
+    "progress": {
+      "wait_for_approval": "Check your mailbox and click on the link from Zonneplan."
+    },
     "abort": {
       "failed_to_authenticate": "Failed to successful authenticate",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
-    "create_entry": {
-      "default": "[%key:common::config_flow::create_entry::authenticated%]"
-    },
     "error": {
-      "failed_to_request_login": "Failed to request login link *(check logs)*",
+      "failed_to_request_login": "Failed to request login link, try again at a later point. *(If keeps failing, check logs)*",
       "no_password": "No password received yet *(did you follow the link from the email?)*"
     }
   },
@@ -46,6 +50,24 @@
       },
       "current_electricity_tariff": {
         "name": "Current electricity tariff"
+      },
+      "current_quarter_hourly_electricity_tariff": {
+        "name": "Current quarter hourly electricity tariff"
+      },
+      "current_hourly_electricity_tariff": {
+        "name": "Current hourly electricity tariff"
+      },
+      "cheapest_hour_today": {
+        "name": "Cheapest hour today"
+      },
+      "most_expensive_hour_today": {
+        "name": "Most expensive hour today"
+      },
+      "cheapest_quarter_hour_today": {
+        "name": "Cheapest quarter-hour today"
+      },
+      "most_expensive_quarter_hour_today": {
+        "name": "Most expensive quarter-hour today"
       },
       "current_gas_tariff": {
         "name": "Current gas tariff"
@@ -151,6 +173,24 @@
       },
       "electricity_production_costs_this_year": {
         "name": "Electricity production costs this year"
+      },
+      "electricity_delivery_price_per_unit_today": {
+        "name": "Electricity delivery price per unit today"
+      },
+      "electricity_delivery_price_per_unit_this_month": {
+        "name": "Electricity delivery price per unit this month"
+      },
+      "electricity_delivery_price_per_unit_this_year": {
+        "name": "Electricity delivery price per unit this year"
+      },
+      "electricity_production_price_per_unit_today": {
+        "name": "Electricity production price per unit today"
+      },
+      "electricity_production_price_per_unit_this_month": {
+        "name": "Electricity production price per unit this month"
+      },
+      "electricity_production_price_per_unit_this_year": {
+        "name": "Electricity production price per unit this year"
       },
       "gas_consumption_today": {
         "name": "Gas consumption today"
@@ -266,6 +306,9 @@
       "charge_point_dynamic_load_desired_distance": {
         "name": "Charge point dynamic load desired distance"
       },
+      "charge_point_dynamic_desired_additional_battery_percentage": {
+        "name": "Charge point dynamic load desired additional battery percentage"
+      },
       "charge_point_dynamic_load_desired_end_time": {
         "name": "Charge point dynamic load desired end time"
       },
@@ -374,6 +417,12 @@
       },
       "stop_charge": {
         "name": "Stop charge"
+      },
+      "continue_auto_charging": {
+        "name": "Continue auto charging"
+      },
+      "reset_dynamic_charge": {
+        "name": "Reset dynamic charge plan"
       }
     },
     "number": {
@@ -382,6 +431,17 @@
       },
       "max_charge_power": {
         "name": "Max charge power (Home optimization)"
+      },
+      "charge_point_dynamic_load_desired_distance": {
+        "name": "Desired distance"
+      },
+      "charge_point_dynamic_desired_additional_battery_percentage": {
+        "name": "Desired percentage"
+      }
+    },
+    "datetime": {
+      "charge_point_dynamic_load_desired_end_time": {
+        "name": "Desired end time"
       }
     },
     "select": {
@@ -391,6 +451,29 @@
           "dynamic_charging": "Dynamic charging",
           "home_optimization": "Home optimization",
           "self_consumption": "Self consumption"
+        }
+      },
+      "charge_point_vehicle": {
+        "name": "Car"
+      }
+    }
+  },
+  "services": {
+    "fetch_statistics": {
+      "name": "Fetch history from Zonneplan API",
+      "description": "Refetch statistics from a given date until now, repairing any gaps or incorrect historical values.",
+      "fields": {
+        "endpoint": {
+          "name": "Endpoint",
+          "description": "The data endpoint to refetch statistics for (electricity or gas)."
+        },
+        "start_date": {
+          "name": "Start date",
+          "description": "The date to start refetching from. Accepted formats: YYYYMMDD or YYYY-MM-DD."
+        },
+        "connection_uuid": {
+          "name": "Connection UUID",
+          "description": "Optionally limit the refetch to a specific connection UUID. If omitted, all matching connections are updated (see last part of statistics_id: `zonneplan_one:electricity_delivered_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`)."
         }
       }
     }

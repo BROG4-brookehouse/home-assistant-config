@@ -1,5 +1,0 @@
-name: !secret name_work_j
-latitude: !secret lat_work_j
-longitude: !secret lon_work_j
-radius: 350
-icon: mdi:briefcase

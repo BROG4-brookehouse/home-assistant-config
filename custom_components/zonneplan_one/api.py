@@ -5,7 +5,7 @@ from datetime import date
 from http import HTTPStatus
 from typing import Any
 
-from aiohttp import ClientSession
+from aiohttp import ClientResponseError, ClientSession, client
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
@@ -17,6 +17,25 @@ _LOGGER = logging.getLogger(__name__)
 
 class ZonneplanApiError(Exception):
     """Exception to indicate a general API error."""
+
+
+class ZonneplanRateLimitError(ClientResponseError):
+    """Exception raised when the API responds with HTTP 429."""
+
+    def __init__(self, *args: Any, retry_after: int | None = None, **kwargs: Any) -> None:
+        """Initialize the rate-limit exception."""
+        super().__init__(*args, **kwargs)
+        self.retry_after = retry_after
+
+
+def _parse_retry_after(value: str | None) -> int | None:
+    """Parse Retry-After header value as seconds."""
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except ValueError:
+        return None
 
 
 class AsyncConfigEntryAuth(ZonneplanApi):
@@ -41,32 +60,51 @@ class AsyncConfigEntryAuth(ZonneplanApi):
 
         return self._oauth_session.token["access_token"]
 
+    async def async_set_locale(self, locale: str) -> None:
+        """Set the locale for the API "remote" session."""
+        await self.async_put("user-accounts/locale", {"locale": locale})
+
     async def async_get_user_accounts(self) -> ZonneplanAccountsData | None:
         return await self._async_get("user-accounts/me")
 
-    async def async_get(self, connection_uuid: str, path: str) -> dict | None:
-        return await self._async_get("connections/" + connection_uuid + path)
+    async def async_get(self, connection_uuid: str, path: str, *, ignore_etag: bool = False) -> dict | None:
+        return await self._async_get("connections/" + connection_uuid + path, ignore_etag=ignore_etag)
 
     async def async_get_battery_chart(self, contract_uuid: str, chart: str, chart_date: date) -> dict | None:
         """Get battery chart data for the given contract and date."""
         chart_date_str = chart_date.isoformat()
         return await self._async_get(f"contracts/{contract_uuid}/home_battery_installation/charts/{chart}?date={chart_date_str}")
 
-    async def async_get_battery_control_mode(self, contract_uuid: str) -> dict | None:
+    async def async_get_battery_control_mode(self, contract_uuid: str, *, ignore_etag: bool = False) -> dict | None:
         """Get battery control mode."""
-        return await self._async_get(f"api/contracts/{contract_uuid}/home-battery/control-mode")
+        return await self._async_get(f"api/contracts/{contract_uuid}/home-battery/control-mode", ignore_etag=ignore_etag)
 
-    async def async_get_battery_home_optimization(self, contract_uuid: str) -> dict | None:
-        """Get battery control mode."""
-        return await self._async_get(f"api/contracts/{contract_uuid}/home-battery/control-mode/home_optimization")
+    async def async_get_battery_home_optimization(self, contract_uuid: str, *, ignore_etag: bool = False) -> dict | None:
+        """Get battery home optimization."""
+        return await self._async_get(f"api/contracts/{contract_uuid}/home-battery/control-mode/home_optimization", ignore_etag=ignore_etag)
 
-    async def _async_get(self, path: str) -> dict | None:
+    async def async_set_reserve_discharge(self, connection_uuid: str, contract_uuid: str, value: int) -> dict:
+        """Set battery reserve discharge."""
+        params = {"reserved_state_of_charge_wh": value}
+
+        _LOGGER.info("set_backup_power_reserved_state_of_charge: params %s", params)
+
+        return await self.async_post(
+            connection_uuid,
+            f"/home-battery-installation/{contract_uuid}/actions/set_backup_power_reserved_state_of_charge",
+            params,
+        )
+
+    async def async_get_consumer_prices(self, chart_name: str) -> dict | None:
+        return await self._async_get(f"api/consumer-prices/charts/{chart_name}")
+
+    async def _async_get(self, path: str, *, ignore_etag: bool = False) -> dict | None:
         _LOGGER.info("fetch: %s", path)
 
-        headers = self._request_headers
+        headers = dict(self._request_headers)
         url = "https://app-api.zonneplan.nl/" + path
 
-        if self._etags.get(url):
+        if not ignore_etag and self._etags.get(url):
             headers["If-None-Match"] = self._etags[url]
 
         _LOGGER.debug("ZonneplanAPI request header: %s", headers)
@@ -77,10 +115,32 @@ class AsyncConfigEntryAuth(ZonneplanApi):
         )
 
         _LOGGER.debug("ZonneplanAPI response header: %s", response.headers)
-        _LOGGER.info("ZonneplanAPI response status: %s for %s", response.status, path)
+
+        ratelimit_remaining = response.headers.get("x-ratelimit-remaining")
+        if ratelimit_remaining is not None:
+            _LOGGER.info("ZonneplanAPI response status: %s (ratelimit-remaining=%s) for %s", response.status, ratelimit_remaining, path)
+
+            if int(ratelimit_remaining) == 0:
+                _LOGGER.warning(
+                    "ZonneplanAPI ratelimit, retry in: %s seconds",
+                    _parse_retry_after(response.headers.get("Retry-After")),
+                )
+
+        else:
+            _LOGGER.info("ZonneplanAPI response status: %s for %s", response.status, path)
 
         if response.status == HTTPStatus.NOT_MODIFIED:
             return None
+
+        if response.status == HTTPStatus.TOO_MANY_REQUESTS:
+            raise ZonneplanRateLimitError(
+                request_info=response.request_info,
+                history=response.history,
+                status=response.status,
+                message="Rate limit exceeded",
+                headers=response.headers,
+                retry_after=_parse_retry_after(response.headers.get("Retry-After")),
+            )
 
         response.raise_for_status()
 
@@ -103,11 +163,42 @@ class AsyncConfigEntryAuth(ZonneplanApi):
             "POST",
             "https://app-api.zonneplan.nl/connections/" + connection_uuid + path,
             json=params,
-            headers=self._request_headers,
+            headers=dict(self._request_headers),
         )
+
+        return await self._process_response(response)
+
+    async def async_put(self, path: str, params: dict | None = None) -> dict:
+        if params is None:
+            params = {}
+        _LOGGER.info("PUT: %s?%s", path, params)
+
+        response = await self._oauth_session.async_request(
+            "PUT",
+            "https://app-api.zonneplan.nl/" + path,
+            json=params,
+            headers=dict(self._request_headers),
+        )
+
+        return await self._process_response(response)
+
+    async def _process_response(self, response: client.ClientResponse) -> dict:
 
         _LOGGER.debug("ZonneplanAPI response header: %s", response.headers)
         _LOGGER.debug("ZonneplanAPI response status: %s", response.status)
+
+        if response.status == HTTPStatus.TOO_MANY_REQUESTS:
+            raise ZonneplanRateLimitError(
+                request_info=response.request_info,
+                history=response.history,
+                status=response.status,
+                message="Rate limit exceeded",
+                headers=response.headers,
+                retry_after=_parse_retry_after(response.headers.get("Retry-After")),
+            )
+
+        if response.status >= HTTPStatus.BAD_REQUEST:
+            _LOGGER.error("ZonneplanAPI error response for %s %s: %s", response.request_info.method, response.request_info.url, await response.text())
 
         response.raise_for_status()
 
@@ -136,18 +227,23 @@ class ZonneplanOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Imple
         """Domain that is providing the implementation."""
         return DOMAIN
 
-    async def async_request_temp_pass(self, email: str) -> str:
-        return await self._api.async_request_temp_pass(email)
+    async def async_request_otp(self, email: str, source_name: str) -> tuple[str, str] | None:
+        """Start the auth challenge. Returns (auth_session, code_verifier)."""
+        return await self._api.async_request_otp(email, source_name)
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
-        """Resolve external data to tokens."""
-        token = await self._api.async_get_temp_pass(external_data["email"], external_data["uuid"])
-        if not token:
-            _LOGGER.error("Could not get token")
-            msg = "Could not get token"
-            raise ZonneplanApiError(msg)
+        """
+        Not used.
 
-        return token
+        Token resolution happens via ZonneplanApi.async_submit_otp
+        in the config flow, not via the external callback.
+        """
+        msg = "ZonneplanOAuth2Implementation uses email + OTP, not a redirect flow"
+        raise NotImplementedError(msg)
+
+    async def async_submit_otp(self, auth_session: str, otp: str, code_verifier: str) -> dict | None:
+        """Submit the emailed OTP and resolve it to tokens."""
+        return await self._api.async_submit_otp(auth_session, otp, code_verifier)
 
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token."""

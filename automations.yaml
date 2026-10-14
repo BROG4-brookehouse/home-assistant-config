@@ -12,7 +12,7 @@
   - action: light.toggle
     metadata: {}
     target:
-      entity_id: light.kitchen_lights
+      entity_id: light.zg2m_kitchen_lights
     data: {}
   mode: single
 - id: '1770746150187'
@@ -29,7 +29,7 @@
   - action: light.turn_on
     metadata: {}
     target:
-      entity_id: light.kitchen_lights
+      entity_id: light.zg2m_kitchen_lights
     data:
       brightness_step_pct: 10
   mode: single
@@ -47,7 +47,7 @@
   - action: light.turn_on
     metadata: {}
     target:
-      entity_id: light.kitchen_lights
+      entity_id: light.zg2m_kitchen_lights
     data:
       brightness_step_pct: -10
   mode: single
@@ -65,7 +65,7 @@
   - action: light.toggle
     metadata: {}
     target:
-      entity_id: light.living_room_lights
+      entity_id: light.zg2m_living_room_lights
     data: {}
   - action: light.turn_off
     metadata: {}
@@ -143,11 +143,21 @@
     - condition: state
       entity_id: media_player.shield
       attribute: app_name
+      state: Netflix
+    - condition: state
+      entity_id: media_player.shield
+      attribute: app_name
       state: Kodi
     - condition: state
       entity_id: media_player.shield
       attribute: app_name
-      state: Netflix
+      state:
+      - Plex
+    - condition: state
+      entity_id: media_player.shield
+      attribute: app_name
+      state:
+      - Wholphin
   actions:
   - action: scene.turn_on
     metadata: {}
@@ -182,6 +192,16 @@
           entity_id: media_player.shield
           attribute: app_name
           state: Kodi
+        - condition: state
+          entity_id: media_player.shield
+          attribute: app_name
+          state:
+          - Plex
+        - condition: state
+          entity_id: media_player.shield
+          attribute: app_name
+          state:
+          - Wholphin
   actions:
   - action: scene.turn_on
     metadata: {}
@@ -210,7 +230,7 @@
     action: light.turn_off
     target:
       entity_id:
-      - light.living_room_lights
+      - light.zg2m_living_room_lights
       - light.wled_living_room
   mode: single
 - id: '1770791672405'
@@ -354,7 +374,7 @@
     attribute: elevation
   actions:
   - data:
-      entity_id: light.kitchen_lights
+      entity_id: light.zg2m_kitchen_lights
       brightness: 115
       transition: 1
     action: light.turn_on
@@ -371,7 +391,7 @@
   conditions: []
   actions:
   - data:
-      entity_id: light.kitchen_lights
+      entity_id: light.zg2m_kitchen_lights
     action: light.turn_off
   mode: single
 - id: '1770842095813'
@@ -387,20 +407,11 @@
     entity_id: sun.sun
     attribute: elevation
   actions:
-  - data: {}
-    action: light.turn_on
+  - action: scene.turn_on
+    metadata: {}
     target:
-      entity_id: light.office_lights
-  - data:
-      effect: Rainbow Runner
-      brightness: 150
-      rgb_color:
-      - 255
-      - 255
-      - 255
-    action: light.turn_on
-    target:
-      entity_id: light.wled_office
+      entity_id: scene.kantoor_licht_scene_rood
+    data: {}
   mode: single
 - id: '1770842157562'
   alias: Kantoor lampen uit - beweging
@@ -414,7 +425,7 @@
   conditions: []
   actions:
   - data:
-      entity_id: light.office_lights
+      entity_id: lights.zg2m_office_lights
     action: light.turn_off
   - delay:
       hours: 0
@@ -426,7 +437,7 @@
     action: light.turn_off
   mode: single
 - id: '1770842282219'
-  alias: Kantoor grote lamp en kleine lamp toggle - knop
+  alias: Kantoor kast lampen toggle - knop
   description: ''
   triggers:
   - domain: mqtt
@@ -439,11 +450,14 @@
   - action: light.toggle
     metadata: {}
     target:
-      entity_id: light.office_lights
+      entity_id:
+      - light.office_open_closet_light
+      - light.office_corner_color_light
+      - light.wled_office
     data: {}
   mode: single
 - id: '1770842401520'
-  alias: Kantoor wled toggle - knop
+  alias: Kantoor bureau lamp toggle - knop
   description: ''
   triggers:
   - domain: mqtt
@@ -457,7 +471,7 @@
     metadata: {}
     data: {}
     target:
-      entity_id: light.wled_office
+      entity_id: light.office_desk_light
   mode: single
 - id: '1770842480311'
   alias: Kantoor alle lampen aan - knop
@@ -472,22 +486,11 @@
   actions:
   - action: light.toggle
     metadata: {}
-    data: {}
     target:
       entity_id:
-      - light.office_bureau_light
-      - light.office_corner_color_light
-  - action: light.toggle
-    metadata: {}
-    target:
-      entity_id: light.wled_office
-    data:
-      effect: Rainbow
-      brightness: 150
-      rgb_color:
-      - 255
-      - 255
-      - 255
+      - lights.zg2m_office_lights
+      - light.wled_office
+    data: {}
   mode: single
 - id: '1770842519407'
   alias: Kantoor Nano wordt opgepakt - trilling
@@ -542,9 +545,10 @@
     event: sunset
   conditions: []
   actions:
-  - data:
-      entity_id: switch.backyard_camera_night_mode
+  - data: {}
     action: switch.turn_on
+    target:
+      entity_id: switch.backyard_camera_night_mode
   mode: single
 - id: '1770890710827'
   alias: Achtertuin deactiveer nachtmodus - zon
@@ -554,9 +558,10 @@
     event: sunrise
   conditions: []
   actions:
-  - data:
-      entity_id: switch.backyard_camera_night_mode
+  - data: {}
     action: switch.turn_off
+    target:
+      entity_id: switch.backyard_camera_night_mode
   mode: single
 - id: '1770891608742'
   alias: Oprit voordeur lampen uit om middernacht - tijd
@@ -567,7 +572,7 @@
   conditions: []
   actions:
   - data:
-      entity_id: light.frontdoor_lights
+      entity_id: light.zg2m_frontdoor_lights
       transition: 1
     action: light.turn_off
   mode: single
@@ -609,7 +614,7 @@
     before: sunrise
   actions:
   - data:
-      entity_id: light.frontdoor_lights
+      entity_id: light.zg2m_frontdoor_lights
       brightness: 254
       transition: 1
     action: light.turn_on
@@ -630,7 +635,7 @@
     before: '12:00:00'
   actions:
   - data:
-      entity_id: light.frontdoor_lights
+      entity_id: light.zg2m_frontdoor_lights
       transition: 1
     action: light.turn_off
   mode: single
@@ -645,10 +650,11 @@
   conditions: []
   actions:
   - data:
-      entity_id: light.frontdoor_lights
       brightness: 153
       transition: 1
     action: light.turn_on
+    target:
+      entity_id: light.zg2m_frontdoor_lights
   mode: single
 - id: '1770908139608'
   alias: Oprit voordeur lampen uit  - persoondetectie
@@ -667,9 +673,10 @@
     before: '12:00:00'
   actions:
   - data:
-      entity_id: light.frontdoor_lights
       transition: 1
     action: light.turn_off
+    target:
+      entity_id: light.zg2m_frontdoor_lights
   mode: single
 - id: '1770908185773'
   alias: Oprit voordeur lampen aan - persoondetectie
@@ -685,7 +692,7 @@
     before: sunrise
   actions:
   - data:
-      entity_id: light.frontdoor_lights
+      entity_id: light.zg2m_frontdoor_lights
       brightness: 254
       transition: 1
     action: light.turn_on
@@ -700,7 +707,7 @@
   conditions: []
   actions:
   - data:
-      entity_id: light.hallway_lights
+      entity_id: light.zg2m_hallway_lights
     action: light.turn_off
   mode: single
 - id: '1770972119565'
@@ -717,7 +724,7 @@
     attribute: elevation
   actions:
   - data:
-      entity_id: light.hallway_lights
+      entity_id: light.zg2m_hallway_lights
       brightness_pct: 32
     action: light.turn_on
   mode: single
@@ -788,18 +795,18 @@
   conditions: []
   actions:
   - data:
-      entity_id: light.living_room_lights
+      entity_id: light.zg2m_living_room_lights
     action: light.turn_off
   - data:
-      entity_id: light.kitchen_lights
+      entity_id: light.zg2m_kitchen_lights
     action: light.turn_off
   - delay:
       seconds: 2
   - data:
-      entity_id: light.hallway_lights
+      entity_id: light.zg2m_hallway_lights
     action: light.turn_off
   - data:
-      entity_id: light.office_lights
+      entity_id: lights.zg2m_office_lights
     action: light.turn_off
   - delay:
       seconds: 2
@@ -907,7 +914,7 @@
   - action: light.turn_on
     metadata: {}
     target:
-      entity_id: light.holiday_lights
+      entity_id: light.zg2m_vacation_lights
     data: {}
   mode: single
 - id: '1771062498198'
@@ -921,7 +928,7 @@
   - data: {}
     action: light.turn_off
     target:
-      entity_id: light.holiday_lights
+      entity_id: light.zg2m_vacation_lights
   mode: single
 - id: '1771062833591'
   alias: Routine picnic komt eraan - tijd
@@ -1064,4 +1071,101 @@
     data: {}
     target:
       entity_id: switch.sonoff_christmas_backyard
+  mode: single
+- id: '1786639493762'
+  alias: Palworld server gestart - numeric state
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.palworld_players
+    above: 0
+  conditions: []
+  actions:
+  - action: notify.telegram_notify
+    metadata: {}
+    data:
+      message: Iemand is lekker Palworld aan het spelen
+      title: Palworld server gestart!
+  mode: restart
+- id: '1786695120900'
+  alias: Palworld server gestopt - numeric state
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.palworld_players
+    below: 1
+  conditions: []
+  actions:
+  - action: notify.telegram_notify
+    metadata: {}
+    data:
+      message: Lekker gewerkt mannen
+      title: Palworld server gestopt!
+  mode: restart
+- id: '1791912560637'
+  alias: Achtertuin staande lampen aan - zon
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id: sun.sun
+    attribute: elevation
+    below: -3.1
+  conditions: []
+  actions:
+  - action: light.turn_on
+    target:
+      entity_id: light.zg2m_backyard_standing_lights
+    data:
+      transition: 1
+      color_temp_kelvin: 2000
+      brightness_pct: 30
+  mode: single
+- id: '1791912621309'
+  alias: Achtertuin staande lampen uit - tijd
+  description: ''
+  triggers:
+  - trigger: time
+    at: '23:00:00'
+  conditions: []
+  actions:
+  - action: light.turn_off
+    target:
+      entity_id:
+      - light.zg2m_backyard_standing_lights
+    data: {}
+  mode: single
+- id: '1791957356151'
+  alias: Achtertuin staande lampen aan ochtend - tijd
+  description: ''
+  triggers:
+  - trigger: time
+    at: 06:00:00
+  conditions: []
+  actions:
+  - action: light.turn_on
+    target:
+      entity_id:
+      - light.zg2m_backyard_standing_lights
+    data:
+      color_temp_kelvin: 2000
+      brightness_pct: 30
+  mode: single
+- id: '1791957454623'
+  alias: Achtertuin staande lampen uit ochtend - zon
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sun.sun
+    attribute: elevation
+    above: 0
+  conditions: []
+  actions:
+  - action: light.turn_off
+    target:
+      entity_id:
+      - light.zg2m_backyard_standing_lights
+    data: {}
   mode: single

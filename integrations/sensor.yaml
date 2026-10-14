@@ -1,1 +1,1 @@
-sensor: !include_dir_list ../entities/sensors
+sensor: !include ../sensor.yaml

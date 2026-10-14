@@ -8,12 +8,13 @@
     "@fsaris"
   ],
   "config_flow": true,
+  "dependencies": ["recorder"],
   "documentation": "https://github.com/fsaris/home-assistant-zonneplan-one",
   "homekit": {},
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/fsaris/home-assistant-zonneplan-one/issues",
   "requirements": [],
   "ssdp": [],
-  "version": "2026.2.1",
+  "version": "2026.8.1",
   "zeroconf": []
 }

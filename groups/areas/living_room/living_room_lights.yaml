@@ -1,4 +1,0 @@
-name: Living room lights
-entities:
-  - light.living_room_lights #Zigbee2MQTT Group
-  - light.wled_living_room

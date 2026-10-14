@@ -62,3 +62,12 @@ class BatteryDataUpdateCoordinator(ZonneplanDataUpdateCoordinator):
             _LOGGER.debug("Update battery data: %s", battery_data)
 
             return battery_data or self.data
+
+    async def async_set_reserve_discharge(self, value: int) -> None:
+
+        response = await self.api.async_set_reserve_discharge(self.connection_uuid, self.contract["uuid"], value)
+
+        _LOGGER.debug("enable_home_optimization response: %s", response)
+
+        # Assure sensors/controls are updated
+        self.async_update_listeners()
